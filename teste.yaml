@@ -1,0 +1,40 @@
+blueprint:
+  name: Daily Tasks and Events Notification
+  description: Send a daily notification with tasks and events
+  triggers:
+    - platform: time
+      at: '08:00:00'  # adjust the time to your preference
+
+actions:
+  - variables:
+      tasks: []
+      events: []
+
+  - action: todo.get_items
+    target:
+      entity_id: todo.item_list  # replace with your todo list entity ID
+    data:
+      status: needs_action
+    register: tasks_result
+
+  - action: calendar.get_events
+    target:
+      entity_id: calendar.your_calendar  # replace with your calendar entity ID
+    data:
+      start: '{{ now() }}'
+      end: '{{ now() + 1 }}'  # adjust the time range to your preference
+    register: events_result
+
+  - for: task in tasks_result.result
+    variables:
+      tasks: '{{ tasks + [task.item] }}'
+
+  - for: event in events_result.result
+    variables:
+      events: '{{ events + [event.summary] }}'
+
+  - action: notify.notify
+    data:
+      message: 'Today''s tasks: {{ tasks | join(", ") }}. Today''s events: {{ events | join(", ") }}'
+    target:
+      entity_id: notify.your_notification_target  # replace with your notification target entity ID
