@@ -153,7 +153,7 @@ action:
   
         Calendars:
         {%- for calendar in calendar_entities %}
-        {{ state_attr(calendar, 'friendly_name') }} events for the next {{ calendar_duration.hours }}:
+        {{ state_attr(calendar, 'friendly_name') }} events for the next {{ calendar_duration.hours }} hours:
         {%- set agenda = (events_responses | selectattr('entity_id', 'equalto', calendar) | list | first) %}
         {%- if agenda and agenda.events %}
           {%- for event in agenda.events %}
