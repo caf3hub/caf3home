@@ -1,33 +1,33 @@
 ---
 blueprint:
-  name: Conversation agent Calendar and Task Notification
+  name: Notificação de Calendário e Tarefas IA
   description:
-    Conversation agent generates a notification based on the upcoming calendar
-    agenda, location, and weather information.
+    O agente de conversa gera uma notificação baseada na agenda do calendário,
+    localização e informações meteorológicas.
   domain: automation
   input:
     notify_time:
-      name: Notification time
-      description: Time the automation is triggered to send the notification.
+      name: Horário da Notificação
+      description: Horário em que a automação será acionada para enviar a notificação.
       selector:
         time: {}
-      default: 07:00:00
+      default: 05:00:00
     notify_service:
-      name: Notify service name
+      name: Nome do Serviço de Notificação
       description:
-        The name of the notify service where the notification should be sent.
+        O nome do serviço de notificação onde a notificação deve ser enviada.
       selector:
         text: {}
       default: notify.notify
     notify_target:
-      name: Notify target
-      description: The target of the notify service.
+      name: Destino da Notificação
+      description: O destino do serviço de notificação.
       selector:
         text: {}
       default:
     calendar_entities:
-      name: Calendars
-      description: The calendar entities to use for finding upcoming calendar events.
+      name: Calendários
+      description: As entidades de calendário a serem usadas para encontrar os próximos eventos.
       selector:
         entity:
           multiple: true  # Permite selecionar múltiplos calendários
@@ -35,15 +35,15 @@ blueprint:
             - domain:
                 - calendar
     calendar_duration:
-      name: Calendar and Task Duration
-      description: How many hours ahead to look for upcoming calendar events and tasks.
+      name: Duração do Calendário e Tarefas
+      description: Quantas horas à frente verificar os próximos eventos e tarefas.
       selector:
         duration:
       default:
         hours: 18
     weather_entity:
-      name: Weather Entity
-      description: The weather entity to use for upcoming weather forecast.
+      name: Entidade de Clima
+      description: A entidade de clima a ser usada para a previsão meteorológica.
       selector:
         entity:
           multiple: false
@@ -51,10 +51,10 @@ blueprint:
             - domain:
                 - weather
     zone_entity:
-      name: Home Zone Entity
+      name: Entidade de Zona de Casa
       description:
-        The zone entity to use to determine approximate location for understanding
-        typical weather.
+        A entidade de zona a ser usada para determinar a localização aproximada para entender
+        o clima típico.
       selector:
         entity:
           multiple: false
@@ -62,35 +62,38 @@ blueprint:
             - domain:
                 - zone
     task_list_entities:
-      name: Task List Entities
-      description: The entities that hold the task list information.
+      name: Entidades de Lista de Tarefas
+      description: As entidades que contêm as informações das listas de tarefas.
       selector:
         entity:
           multiple: true  # Permite selecionar múltiplas listas de tarefas
           filter:
-            - domain: sensor
-              integration: your_integration  # Substitua pela integração correta
+            - domain:
+                - todo
     conversation_agent:
-      name: Conversation Agent
+      name: Agente de Conversa
       selector:
         conversation_agent:
     prompt:
-      name: Conversation Agent Prompt
+      name: Prompt do Agente de Conversa
       selector:
         text:
           multiline: true
           type: text
       default: |-
-        Please generate text for a notification that will be sent to the users
-        smartphone with helpful information.
-
-        You are a helpful personal agent that generates text for the user:
-        - Your answers are helpful, friendly, warm, insightful.
-        - Your answers are not technical, and do not include Home Assistant internal details such as entities in responses.
-        - Your messages help the user prepare for their day, for example:
-          - Making note of unusual weather for the location and time of year (but not mundane details like "0% chance of precipitation")
-          - How much time remaining until their first meeting
-          - Anything that may be special or unique, such as celebrating a birthday
+        Por favor, gere um texto para uma notificação que será enviada aos usuários
+        smartphone com informações úteis.
+        
+        Você é um agente pessoal útil que gera texto para o usuário:
+        - Suas respostas são úteis, amigáveis, calorosas e perspicazes.
+        - Suas respostas não são técnicas e não incluem detalhes internos do Home Assistant, como entidades nas respostas.
+        - Suas mensagens dos eventos do calendário são em tópicos para facilitar a leitura e compreensão.
+        - Suas mensagens ajudam o usuário a se preparar para o dia, por exemplo:
+          - Anotar condições climáticas incomuns para o local e a época do ano (mas não detalhes mundanos como "0% de chance de precipitação")
+          - Quanto tempo resta até a primeira reunião
+          - Todos os eventos do dia
+          - Todas as tarefas do dia
+          - Qualquer coisa que possa ser especial ou única, como comemorar um aniversário
 
 trigger:
   platform: time
@@ -104,7 +107,7 @@ action:
       calendar_duration: !input calendar_duration
       task_list_entities: !input task_list_entities
       prompt: !input prompt
-  - alias: Fetch Weather Forecast
+  - alias: Obter Previsão do Tempo
     service: weather.get_forecasts
     data:
       type: hourly
@@ -115,14 +118,14 @@ action:
   - variables:
       forecast_entity: "{{ daily_forecast[weather_entity] }}"
       forecast: "{{ forecast_entity.forecast[0] }}"
-  - alias: Fetch Calendar Agenda
+  - alias: Obter Agenda do Calendário
     service: calendar.get_events
     data:
       duration: !input calendar_duration
     target:
       entity_id: !input calendar_entities
     response_variable: events_responses
-  - alias: Fetch Task Lists
+  - alias: Obter Listas de Tarefas
     variables:
       start_time: "{{ now() }}"
       end_time: "{{ now() + calendar_duration }}"
@@ -139,7 +142,7 @@ action:
           {% endif %}
         {% endfor %}
         {{ all_tasks }}
-  - alias: "Conversation Agent Notification Text"
+  - alias: "Texto da Notificação do Agente de Conversa"
     service: conversation.process
     data:
       text: |-
@@ -181,7 +184,7 @@ action:
         {{ prompt }}
       agent_id: !input conversation_agent
     response_variable: agent
-  - alias: "Send notification"
+  - alias: "Enviar notificação"
     service: !input notify_service
     data:
       target: !input notify_target
