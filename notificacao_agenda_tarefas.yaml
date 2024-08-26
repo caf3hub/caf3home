@@ -160,19 +160,21 @@ action:
           - No upcoming events.
         {%- endif %}
 
-        Tasks:
-        {%- set listas = task_list_entities -%}
-        {%- for lista in listas %}
-        {{ lista }}:
-        {%- set items = mylist[lista]['items'] -%}
+        Tasks
+        {% set listas = task_list_entities -%}
+        {% for lista in listas %}
+          {{ lista.split('.')[1] }}:
+          {%- set items = mylist[lista]['items'] if mylist is defined else [] -%}
           {%- if items %}
-            • {% for item in items %}{{ item.summary }}{% if not loop.last %}
-            • {% endif %}{% endfor %}
+            {% for item in items %}
+              {{ item.summary }}
+            {% endfor %}
           {%- else %}
             Nenhuma tarefa pendente.
-          {%- endif %}
-        {% if not loop.last %}{% endif %}
-        {% endfor -%}
+          {%- endif -%}
+        {% if not loop.last %}
+        {% endif %}
+        {% endfor %}
 
         {{ prompt }}
       agent_id: !input conversation_agent
