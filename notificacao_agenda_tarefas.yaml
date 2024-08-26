@@ -127,15 +127,14 @@ action:
     response_variable: events_responses
   - alias: Obter Listas de Tarefas
     variables:
-      start_time: "{{ now() }}"
-      end_time: "{{ now() + calendar_duration }}"
+      today: "{{ now().date() }}"
       tasks: >
         {% set all_tasks = [] %}
         {% for entity_id in task_list_entities %}
           {% set entity_tasks = state_attr(entity_id, 'tasks') %}
           {% if entity_tasks %}
             {% for task in entity_tasks %}
-              {% if task.due_date >= start_time and task.due_date <= end_time %}
+              {% if task.due_date.date() == today %}
                 {% set all_tasks = all_tasks + [task] %}
               {% endif %}
             {% endfor %}
