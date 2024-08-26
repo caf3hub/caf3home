@@ -1,265 +1,130 @@
+---
 blueprint:
-  name: Calendar and To-Do List Notification
-  description: |
-    **Version: 1.0**
-
-    This blueprint retrieves upcoming events from up to 3 calendars and tasks from up to 3 task lists and sends notifications with the details.
-
-    **Inputs:**
-    - Notification time to trigger the automation.
-    - Number of calendars and task lists to use.
-    - Entities for the calendars and task lists.
-    - Notification service(s) to send the message.
-  author: Your Name
+  name: Notificação de Calendário e Tarefas IA
+  description:
+    O agente de conversa gera uma notificação baseada na agenda do calendário,
+    localização e informações meteorológicas.
   domain: automation
   input:
     notify_time:
-      name: Notification time
-      description: Time the automation is triggered to send the notification.
+      name: Horário da Notificação
+      description: Horário em que a automação será acionada para enviar a notificação.
       selector:
         time: {}
-      default: 07:00:00
-    calendar_number:
-      name: How many calendars do you want to use?
-      description: Select the number of calendars to use.
-      default: one
+      default: 05:00:00
+    notify_service:
+      name: Nome do Serviço de Notificação
+      description:
+        O nome do serviço de notificação onde a notificação deve ser enviada.
       selector:
-        select:
-          options:
-          - label: '1'
-            value: one
-          - label: '2'
-            value: two
-          - label: '3'
-            value: three
-          multiple: false
-          custom_value: false
-    calendar_entity_1:
-      name: First Calendar
-      description: The first calendar entity to use for finding upcoming calendar events.
-      default: []
+        text: {}
+      default: notify.notify
+    notify_target:
+      name: Destino da Notificação
+      description: O destino do serviço de notificação.
+      selector:
+        text: {}
+      default:
+    calendar_entities:
+      name: Calendários
+      description: As entidades de calendário a serem usadas para encontrar os próximos eventos.
       selector:
         entity:
-          multiple: false
-          filter:
-            - domain:
-                - calendar
-    calendar_entity_2:
-      name: Second Calendar
-      description: The second calendar entity to use for finding upcoming calendar events.
-      default: []
-      selector:
-        entity:
-          multiple: false
-          filter:
-            - domain:
-                - calendar
-    calendar_entity_3:
-      name: Third Calendar
-      description: The third calendar entity to use for finding upcoming calendar events.
-      default: []
-      selector:
-        entity:
-          multiple: false
+          multiple: true  # Permite selecionar múltiplos calendários
           filter:
             - domain:
                 - calendar
     calendar_duration:
-      name: Calendar event duration
-      description: How many hours ahead to look for upcoming calendar events.
+      name: Duração do Calendário e Tarefas
+      description: Quantas horas à frente verificar os próximos eventos e tarefas.
       selector:
         duration:
       default:
         hours: 18
-    task_number:
-      name: How many task lists do you want to use?
-      description: Select the number of task lists to use.
-      default: one
-      selector:
-        select:
-          options:
-          - label: '1'
-            value: one
-          - label: '2'
-            value: two
-          - label: '3'
-            value: three
-          multiple: false
-          custom_value: false
-    task_list_entity_1:
-      name: First Task List
-      description: The first task list entity to use.
-      default: []
+    weather_entity:
+      name: Entidade de Clima
+      description: A entidade de clima a ser usada para a previsão meteorológica.
       selector:
         entity:
           multiple: false
           filter:
             - domain:
-                - todo
-    task_list_entity_2:
-      name: Second Task List
-      description: The second task list entity to use.
-      default: []
+                - weather
+    zone_entity:
+      name: Entidade de Zona de Casa
+      description:
+        A entidade de zona a ser usada para determinar a localização aproximada para entender
+        o clima típico.
       selector:
         entity:
           multiple: false
           filter:
             - domain:
-                - todo
-    task_list_entity_3:
-      name: Third Task List
-      description: The third task list entity to use.
-      default: []
+                - zone
+    task_list_entities:
+      name: Entidades de Lista de Tarefas
+      description: As entidades que contêm as informações das listas de tarefas.
       selector:
         entity:
-          multiple: false
+          multiple: true  # Permite selecionar múltiplas listas de tarefas
           filter:
             - domain:
                 - todo
-    notify_number:
-      name: How many notify services do you want to use?
-      description: Select the number of notify services to use.
-      default: one
-      selector:
-        select:
-          options:
-          - label: '1'
-            value: one
-          - label: '2'
-            value: two
-          - label: '3'
-            value: three
-          multiple: false
-          custom_value: false
-    notify_service_1:
-      name: First Notify service name
-      description:
-        The name of the first notify service where the notification should be sent.
-      selector:
-        text: {}
-      default: notify.notify_1
-    notify_service_2:
-      name: Second Notify service name
-      description:
-        The name of the second notify service where the notification should be sent.
-      selector:
-        text: {}
-      default: notify.notify_2
-    notify_service_3:
-      name: Third Notify service name
-      description:
-        The name of the third notify service where the notification should be sent.
-      selector:
-        text: {}
-      default: notify.notify_3
     conversation_agent:
-      name: Conversation agent
-      description: The conversation agent to use for generating the notification text.
+      name: Agente de Conversa
       selector:
         conversation_agent:
     prompt:
-      name: Conversation agent prompt
+      name: Prompt do Agente de Conversa
       selector:
         text:
           multiline: true
           type: text
       default: |-
-        Please generate text for a notification that will be sent to the user with helpful information.
-
-        You are a helpful personal agent that generates text for the user:
-        - Your answers are helpful, friendly, warm, and insightful.
-        - Your answers are not technical and do not include Home Assistant internal details such as entities in responses.
-        - Your messages help the user prepare for their day by summarizing upcoming events and tasks.
-        - Make note of any special or unusual details such as birthdays, important meetings, or weather conditions.
+        Por favor, gere um texto para uma notificação que será enviada aos usuários
+        smartphone com informações úteis.
+        
+        Você é um agente pessoal útil que gera texto para o usuário:
+        - Suas respostas são úteis, amigáveis, calorosas e perspicazes.
+        - Suas respostas não são técnicas e não incluem detalhes internos do Home Assistant, como entidades nas respostas.
+        - Suas mensagens dos eventos do calendário são em tópicos para facilitar a leitura e compreensão.
+        - Suas mensagens ajudam o usuário a se preparar para o dia, por exemplo:
+          - Anotar condições climáticas incomuns para o local e a época do ano (mas não detalhes mundanos como "0% de chance de precipitação")
+          - Quanto tempo resta até a primeira reunião
+          - Todos os eventos do dia
+          - Todas as tarefas do dia
+          - Qualquer coisa que possa ser especial ou única, como comemorar um aniversário
 
 trigger:
   platform: time
   at: !input notify_time
 
 action:
-  - variables:
-      calendar_number: !input calendar_number
-      calendar_entity_1: !input calendar_entity_1
-      calendar_entity_2: !input calendar_entity_2
-      calendar_entity_3: !input calendar_entity_3
-      task_number: !input task_number
-      task_list_entity_1: !input task_list_entity_1
-      task_list_entity_2: !input task_list_entity_2
-      task_list_entity_3: !input task_list_entity_3
-      notify_number: !input notify_number
-      calendar_duration: !input calendar_duration
-      prompt: !input prompt
-
-  - alias: Fetch First Calendar Agenda
-    service: calendar.list_events
+  - alias: Obter Tarefas
     data:
-      duration: !input calendar_duration
+      status: needs_action
     target:
-      entity_id: !input calendar_entity_1
-    response_variable: agenda_1
-
-  - if:
-      - condition: template
-        value_template: '{{ (calendar_number == ''two'') or (calendar_number == ''three'') }}'
-    then:
-      - alias: Fetch Second Calendar Agenda
-        service: calendar.list_events
-        data:
-          duration: !input calendar_duration
-        target:
-          entity_id: !input calendar_entity_2
-        response_variable: agenda_2
-
-  - if:
-      - condition: template
-        value_template: '{{ calendar_number == ''three''}}'
-    then:
-      - alias: Fetch Third Calendar Agenda
-        service: calendar.list_events
-        data:
-          duration: !input calendar_duration
-        target:
-          entity_id: !input calendar_entity_3
-        response_variable: agenda_3
-
-  - alias: Fetch First Task List
-    service: todo.get_items
-    data:
-      entity_id: !input task_list_entity_1
-    response_variable: tasks_1
-
-  - if:
-      - condition: template
-        value_template: '{{ (task_number == ''two'') or (task_number == ''three'') }}'
-    then:
-      - alias: Fetch Second Task List
-        service: todo.get_items
-        data:
-          entity_id: !input task_list_entity_2
-        response_variable: tasks_2
-
-  - if:
-      - condition: template
-        value_template: '{{ task_number == ''three''}}'
-    then:
-      - alias: Fetch Third Task List
-        service: todo.get_items
-        data:
-          entity_id: !input task_list_entity_3
-        response_variable: tasks_3
-
-  - alias: "Generate Notification Text"
+      entity_id: !input task_list_entities
+    response_variable: mylist
+    action: todo.get_items
+    enabled: true
+  - alias: "Texto da Notificação do Agente de Conversa"
     service: conversation.process
     data:
       text: |-
-        {% set calendars = {'calendar1': agenda_1, 'calendar2': agenda_2 if calendar_number in ['two', 'three'] else None, 'calendar3': agenda_3 if calendar_number == 'three' else None} %}
-        {% set tasks = {'task1': tasks_1, 'task2': tasks_2 if task_number in ['two', 'three'] else None, 'task3': tasks_3 if task_number == 'three' else None} %}
-        
-        {% for cal_key, agenda in calendars.items() %}
-        {{ cal_key | capitalize }}:
-        {% if agenda.events %}
-          {% for event in agenda.events %}
-          - Event: {{ event.summary }}
+        Time: {{ now().strftime("%A %B %d %H:%M %p") }}
+        {%- if weather_entity is defined %}
+        {%- set temperature_unit = state_attr(weather_entity, 'temperature_unit') -%}
+        Forecast: {{ forecast.condition }} ({{ forecast.temperature }}{{ temperature_unit }}, {{ forecast.precipitation }}% precipitation)
+        {%- endif %}
+  
+        Calendars:
+        {%- for calendar in calendar_entities %}
+        {{ state_attr(calendar, 'friendly_name') }} events for the next {{ calendar_duration.hours }}:
+        {%- set agenda = (events_responses | selectattr('entity_id', 'equalto', calendar) | list | first) %}
+        {%- if agenda and agenda.events %}
+          {%- for event in agenda.events %}
+          - Summary: {{ event.summary }}
             Start-End: {% if event.start is defined %}{{ event.start }} to {{ event.end }}{% else %}All Day{% endif %}
             {%- if event.description is defined %}
             Description: {{ event.description }}
@@ -267,47 +132,33 @@ action:
             {%- if event.location is defined %}
               Location: {{ event.location }}
             {% endif -%}
-          {% endfor %}
-        {% else %}
+          {%- endfor %}
+        {%- else %}
           - No upcoming events.
-        {% endif %}
-        {% endfor %}
-
-        {% for task_key, tasks_list in tasks.items() %}
-        {{ task_key | capitalize }}:
-        {% if tasks_list.items %}
-          {% for task in tasks_list.items %}
-          - Task: {{ task.summary }}
-          {% endfor %}
-        {% else %}
-          - No tasks pending.
-        {% endif %}
-        {% endfor %}
-        
+        {%- endif %}
+        {%- endfor %}
+  
+        Tasks:
+        {%- set listas = task_list_entities -%}
+        {%- for lista in listas %}
+        {{ lista }}:
+        {%- set items = mylist[lista]['items'] -%}
+          {%- if items %}
+            • {% for item in items %}{{ item.summary }}{% if not loop.last %}
+            • {% endif %}{% endfor %}
+          {%- else %}
+            Nenhuma tarefa pendente.
+          {%- endif %}
+        {% if not loop.last %}{% endif %}
+        {% endfor -%}
+  
         {{ prompt }}
       agent_id: !input conversation_agent
     response_variable: agent
-
-  - alias: "Send Notification"
-    service: !input notify_service_1
+  - alias: "Enviar notificação"
+    service: !input notify_service
     data:
-      title: "Daily Overview"
+      target: !input notify_target
+      title: "{{ now().strftime('%A') }} Agenda"
       message: "{{ agent.response.speech.plain.speech }}"
-  - if:
-      - condition: template
-        value_template: '{{ (notify_number == ''two'') or (notify_number == ''three'') }}'
-    then:
-      - alias: "Send Notification"
-        service: !input notify_service_2
-        data:
-          title: "Daily Overview"
-          message: "{{ agent.response.speech.plain.speech }}"
-  - if:
-      - condition: template
-        value_template: '{{ notify_number == ''three''}}'
-    then:
-      - alias: "Send Notification"
-        service: !input notify_service_3
-        data:
-          title: "Daily Overview"
-          message: "{{ agent.response.speech.plain.speech }}"
+mode: single
