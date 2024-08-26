@@ -1,40 +1,32 @@
 blueprint:
-  name: Daily Tasks and Events Notification
-  description: Send a daily notification with tasks and events
-  triggers:
-    - platform: time
-      at: '08:00:00'  # adjust the time to your preference
+  name: Notificações Personalizadas de Tarefas e Eventos
+  domain: automation
+  description: Envia notificações com tarefas e eventos do dia em um horário específico.
 
-actions:
-  - variables:
-      tasks: []
-      events: []
+variables:
+  calendars:
+    description: Lista de entidades de calendário
+  todo_list:
+    description: Entidade do todo.item_list
+  notification_time:
+    description: Horário para enviar a notificação (formato: HH:MM)
 
-  - action: todo.get_items
-    target:
-      entity_id: todo.item_list  # replace with your todo list entity ID
+trigger:
+  - platform: time
+    at: '{{ states.input_text.notification_time.state }}'
+
+action:
+  - service: notify.mobile_app_your_phone
     data:
-      status: needs_action
-    register: tasks_result
+      message: >-
+        **Tarefas para hoje:**
+        {% for item in states.todo.todo_list.attributes.items %}
+        - {{ item.name }} (vencimento: {{ item.due_date }})
+        {% endfor %}
 
-  - action: calendar.get_events
-    target:
-      entity_id: calendar.your_calendar  # replace with your calendar entity ID
-    data:
-      start: '{{ now() }}'
-      end: '{{ now() + 1 }}'  # adjust the time range to your preference
-    register: events_result
-
-  - for: task in tasks_result.result
-    variables:
-      tasks: '{{ tasks + [task.item] }}'
-
-  - for: event in events_result.result
-    variables:
-      events: '{{ events + [event.summary] }}'
-
-  - action: notify.notify
-    data:
-      message: 'Today''s tasks: {{ tasks | join(", ") }}. Today''s events: {{ events | join(", ") }}'
-    target:
-      entity_id: notify.your_notification_target  # replace with your notification target entity ID
+        **Eventos do dia:**
+        {% for calendar in variables.calendars %}
+        {% for event in states.calendar.{{ calendar }}.attributes.events %}
+        - {{ event.summary }} ({{ event.start.dateTime }})
+        {% endfor %}
+        {% endfor %}
