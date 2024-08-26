@@ -131,10 +131,10 @@ action:
       tasks: >
         {% set all_tasks = [] %}
         {% for entity_id in task_list_entities %}
-          {% set entity_tasks = state_attr(entity_id, 'tasks') %}
+          {% set entity_tasks = state_attr(entity_id, 'items') %}
           {% if entity_tasks %}
             {% for task in entity_tasks %}
-              {% if task.due_date.date() == today %}
+              {% if task.due_date and task.due_date[:10] == today.isoformat() %}
                 {% set all_tasks = all_tasks + [task] %}
               {% endif %}
             {% endfor %}
@@ -150,12 +150,12 @@ action:
         {%- set temperature_unit = state_attr(weather_entity, 'temperature_unit') -%}
         Forecast: {{ forecast.condition }} ({{ forecast.temperature }}{{ temperature_unit }}, {{ forecast.precipitation }}% precipitation)
         {%- endif %}
-
+  
         Calendars:
         {%- for calendar in calendar_entities %}
         {{ state_attr(calendar, 'friendly_name') }} events for the next {{ calendar_duration.hours }}:
-        {%- set agenda = (events_responses | selectattr('entity_id', 'equalto', calendar) | list | first)[1] %}
-        {%- if agenda.events %}
+        {%- set agenda = (events_responses | selectattr('entity_id', 'equalto', calendar) | list | first) %}
+        {%- if agenda and agenda.events %}
           {%- for event in agenda.events %}
           - Summary: {{ event.summary }}
             Start-End: {% if event.start is defined %}{{ event.start }} to {{ event.end }}{% else %}All Day{% endif %}
@@ -170,16 +170,16 @@ action:
           - No upcoming events.
         {%- endif %}
         {%- endfor %}
-
+  
         Tasks:
         {%- if tasks %}
           {%- for task in tasks %}
-          - {{ task.summary }} (Due: {{ task.due_date.strftime('%H:%M') }})
+          - {{ task.item }} (Due: {{ task.due_date[:10] }})
           {%- endfor %}
         {%- else %}
-          - No tasks for the selected period.
+          - No tasks for today.
         {%- endif %}
-
+  
         {{ prompt }}
       agent_id: !input conversation_agent
     response_variable: agent
