@@ -99,10 +99,10 @@ action:
     data:
       status: needs_action
     target:
-      entity_id: 
-        - "{{ todo_entities }}"
+      entity_id: "{{ todo_entities | list }}"
     response_variable: mylist
     action: todo.get_items
+
 
   - alias: Conversation Agent Notification Text
     data:
