@@ -1,8 +1,14 @@
 blueprint:
-  name: Telegram - Agenda Tarefas 5h
-  description: "Notifica no Telegram sobre a previsão do tempo, eventos do calendário e tarefas do dia às 5h da manhã."
+  name: Telegram - Notificação de Agenda e Tarefas
+  description: "Notifica no Telegram sobre a previsão do tempo, eventos do calendário e tarefas do dia."
   domain: automation
   input:
+    trigger_time:
+      name: Hora do Disparo
+      description: "A hora do dia em que a automação deve disparar."
+      default: "05:00:00"
+      selector:
+        time:
     weather_entity:
       name: Entidade de Previsão do Tempo
       description: Entidade do sensor de previsão do tempo.
@@ -31,8 +37,8 @@ blueprint:
           max: 24
           unit_of_measurement: hours
     notification_target:
-      name: Destinatário da Notificação
-      description: Destinatário da notificação no Telegram.
+      name: Serviço de Notificação
+      description: Serviço de notificação que irá enviar a mensagem.
       selector:
         text:
     todo_entities:
@@ -45,7 +51,7 @@ blueprint:
 
 trigger:
   - platform: time
-    at: "05:00:00"
+    at: !input trigger_time
 
 variables:
   calendar_duration: !input calendar_duration
@@ -72,7 +78,7 @@ variables:
       - Qualquer coisa que possa ser especial ou única, como comemorar um aniversário.
 
 action:
-  - alias: Fetch Weather Forecast
+  - alias: Buscar previsão do tempo
     data:
       type: hourly
     target:
@@ -85,7 +91,7 @@ action:
       forecast_entity: "{{ daily_forecast[weather_entity] }}"
       forecast: "{{ forecast_entity.forecast[0] }}"
 
-  - alias: Fetch Calendar Agenda
+  - alias: Agenda do calendário busca
     data:
       duration:
         hours: "{{ calendar_duration }}"
@@ -104,7 +110,7 @@ action:
     action: todo.get_items
 
 
-  - alias: Conversation Agent Notification Text
+  - alias: Texto de notificação do agente de conversa
     data:
       text: >-
         Time: {{ now().strftime("%A %B %d %H:%M %p") }}
@@ -159,7 +165,7 @@ action:
     response_variable: agent
     action: conversation.process
 
-  - alias: Send notification
+  - alias: Enviar notificação
     data:
       target: !input notification_target
       title: "{{ now().strftime('%A') }} Agenda"
