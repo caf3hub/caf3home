@@ -99,8 +99,8 @@ action:
     data:
       status: needs_action
     target:
-      entity_id:
-        - "{{ todo_entities | join(', ') }}"
+      entity_id: 
+        - "{{ todo_entities }}"
     response_variable: mylist
     action: todo.get_items
 
