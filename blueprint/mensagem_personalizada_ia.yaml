@@ -1,49 +1,47 @@
 blueprint:
   name: Enviar Mensagem Personalizada com IA Generativa
-  description: Gera uma mensagem personalizada com IA generativa e envia via serviço de notificação.
-  domain: automation
-  mode: queued
-  input:
-    mensagem:
-      name: Mensagem
-      description: Texto que será utilizado como base para gerar a mensagem personalizada.
-      selector:
-        text: {}
-      required: true
-    ai_service:
-      name: Serviço de IA Generativa
-      description: O serviço de IA generativa a ser utilizado para criar a mensagem personalizada.
-      selector:
-        entity:
-          domain: google_generative_ai_conversation
-      required: true
-    notification_target:
+  description: Gera uma mensagem personalizada com IA generativa e envia via MQTT ou outro serviço de notificação.
+  domain: script
+mode: queued
+fields:
+  mensagem:
+    selector:
+      text: null
+    name: Mensagem
+    description: Texto que será utilizado como base para gerar a mensagem personalizada.
+    required: true
+  ai_service:
+    selector:
+      entity:
+        domain: google_generative_ai_conversation
+    name: Serviço de IA Generativa
+    required: true
+    default: []
+    description: O serviço de IA generativa a ser utilizado para criar a mensagem personalizada.
+  notification_target:
       name: Serviço de Notificação
       description: Serviço de notificação que irá enviar a mensagem.
       selector:
-        entity:
-          domain: notify
-      required: false
+        text:
+sequence:
+  - service: "{{ ai_service }}"
+    data:
+      prompt: >-
+        Você é o assistente pessoal da minha casa.
+        Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: "{{ mensagem }}".
+        Varie o estilo da mensagem a cada vez que for gerada.
+        Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois não funciona no Telegram.
+      response_variable: mensagem_personalizada
 
-  sequence:
-    - service: "{{ ai_service }}"
-      data:
-        prompt: >-
-          Você é o assistente pessoal da minha casa.
-          Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: "{{ mensagem }}".
-          Varie o estilo da mensagem a cada vez que for gerada.
-          Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois não funciona no Telegram.
-        response_variable: mensagem_personalizada
+  - delay:
+      seconds: 2
 
-    - delay:
-        seconds: 2
-
-    - choose:
-        - conditions:
-            - condition: template
-              value_template: "{{ notification_target }}"
-          sequence:
-            - service: "{{ notification_target }}"
-              data:
-                message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ notification_target }}"
+        sequence:
+          - service: "{{ notification_target }}"
+            data:
+              message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
 icon: mdi:message
