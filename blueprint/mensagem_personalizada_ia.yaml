@@ -1,37 +1,42 @@
 blueprint:
   name: Enviar Mensagem Personalizada com IA Generativa
-  description: Gera uma mensagem personalizada com IA generativa e envia via notificação ou MQTT.
+  description: Gera uma mensagem personalizada com IA generativa e envia via MQTT ou outro serviço de notificação.
   domain: automation
   input:
     mensagem:
       name: Mensagem
-      description: Texto base para gerar a mensagem personalizada.
+      description: Texto que será utilizado como base para gerar a mensagem personalizada.
       selector:
         text: {}
       required: true
-    generative_entity:
-      name: Entidade de IA Generativa
-      description: Entidade para gerar a mensagem personalizada.
+    ai_service:
+      name: Serviço de IA Generativa
+      description: O serviço de IA generativa a ser utilizado para criar a mensagem personalizada.
       selector:
-        entity:
-          domain: google_generative_ai_conversation
+        select:
+          options:
+            - google_generative_ai_conversation.generate_content
+            # Adicione outros serviços de IA generativa, se houver
       required: true
-    notify_entity:
-      name: Entidade de Notificação
-      description: Entidade que receberá a mensagem.
+    notify_service:
+      name: Serviço de Notificação
+      description: O serviço de notificação para onde a mensagem será enviada.
       selector:
-        entity:
-          domain: notify
-      required: false
+        select:
+          options:
+            - mqtt.publish
+            - notify.telegram
+            # Adicione outros serviços de notificação, se houver
+      required: true
     mqtt_topic:
       name: Tópico MQTT
-      description: Tópico MQTT para enviar a mensagem (deixe em branco se não usar MQTT).
+      description: O tópico MQTT para enviar a mensagem (apenas se o serviço de notificação for MQTT).
       selector:
         text: {}
       required: false
 
   sequence:
-    - service: "{{ generative_entity }}"
+    - service: "{{ ai_service }}"
       data:
         prompt: >-
           Você é o assistente pessoal da minha casa.
@@ -40,12 +45,13 @@ blueprint:
           Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois não funciona no Telegram.
         response_variable: mensagem_personalizada
 
-    - delay: "00:00:02"
+    - delay:
+        seconds: 2
 
     - choose:
         - conditions:
             - condition: template
-              value_template: "{{ mqtt_topic }}"
+              value_template: "{{ notify_service == 'mqtt.publish' }}"
           sequence:
             - service: mqtt.publish
               data:
@@ -56,8 +62,17 @@ blueprint:
 
         - conditions:
             - condition: template
-              value_template: "{{ notify_entity }}"
+              value_template: "{{ notify_service == 'notify.telegram' }}"
           sequence:
-            - service: "{{ notify_entity }}"
+            - service: notify.telegram
+              data:
+                message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ notify_service == 'notify.alexa_media' }}"
+          sequence:
+            - service: notify.alexa_media
               data:
                 message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
