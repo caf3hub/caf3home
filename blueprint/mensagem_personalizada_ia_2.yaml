@@ -29,7 +29,8 @@ fields:
       Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois nao funciona no telegram.
     selector:
       text:
-        multiline: true
+        multiline: 
+          rows: 5
 sequence:
   - service: google_generative_ai_conversation.generate_content
     data:
