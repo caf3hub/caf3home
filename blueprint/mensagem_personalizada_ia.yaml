@@ -10,20 +10,13 @@ fields:
     name: Mensagem
     description: Texto que será utilizado como base para gerar a mensagem personalizada.
     required: true
-  ai_service:
-    selector:
-        text:
-    name: Serviço de IA Generativa
-    required: true
-    default: []
-    description: O serviço de IA generativa a ser utilizado para criar a mensagem personalizada.
   notification_target:
       name: Serviço de Notificação
       description: Serviço de notificação que irá enviar a mensagem.
       selector:
         text:
 sequence:
-  - service: "{{ ai_service }}"
+  - service: google_generative_ai_conversation.generate_content
     data:
       prompt: >-
         Você é o assistente pessoal da minha casa.
@@ -31,16 +24,9 @@ sequence:
         Varie o estilo da mensagem a cada vez que for gerada.
         Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois não funciona no Telegram.
     response_variable: mensagem_personalizada
-
   - delay:
       seconds: 2
-
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ notification_target }}"
-        sequence:
-          - service: "{{ notification_target }}"
-            data:
-              message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
+  - service: "{{ notification_target }}"
+    data:
+      message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
 icon: mdi:message
