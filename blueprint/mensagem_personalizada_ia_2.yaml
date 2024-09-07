@@ -19,6 +19,9 @@ fields:
   prompt:
     name: Prompt
     description: Prompt do generative ai conversation.
+    selector:
+      text:
+        multiline: true
     default: >-
       Você é a FRIDAY do Homem de Ferro, e uma assistente pessoal da minha casa.
       Voce vai enviar mensagens para o Telegram ou para Alexa.
@@ -27,10 +30,6 @@ fields:
       Varie o estilo da mensagem a cada vez que for gerada.
       Não quero sugestões, mande apenas uma mensagem.
       Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois nao funciona no telegram.
-    selector:
-      text:
-        multiline: 
-          rows: 5
 sequence:
   - service: google_generative_ai_conversation.generate_content
     data:
