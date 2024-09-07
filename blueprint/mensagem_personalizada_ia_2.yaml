@@ -27,14 +27,13 @@ fields:
       Voce vai enviar mensagens para o Telegram ou para Alexa.
       Varie o estilo da mensagem a cada vez que for gerada.
       Não quero sugestões, mande apenas uma mensagem.
-      Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois nao funciona no telegram.
-      
-      Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que:
+      Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois nao funciona no telegram.      
 sequence:
   - service: google_generative_ai_conversation.generate_content
     data:
       prompt: >-
-        {{ prompt }} "{{ mensagem }}"
+        {{ prompt }}
+        Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: "{{ mensagem }}"
     response_variable: mensagem_personalizada
   - delay:
       seconds: 2
