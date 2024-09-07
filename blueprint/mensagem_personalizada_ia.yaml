@@ -11,11 +11,19 @@ fields:
     description: Texto que será utilizado como base para gerar a mensagem personalizada.
     required: true
   notification_target:
+<<<<<<< Updated upstream
       name: Serviço de Notificação
       description: Serviço de notificação que irá enviar a mensagem.
       default: "notify.mqtt_notify"
       selector:
         text:
+=======
+    name: Serviço de Notificação
+    description: Serviço de notificação que irá enviar a mensagem.
+    default: "notify.mqtt_notify"
+    selector:
+      text:
+>>>>>>> Stashed changes
 sequence:
   - service: google_generative_ai_conversation.generate_content
     data:
