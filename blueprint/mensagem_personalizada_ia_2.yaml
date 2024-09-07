@@ -20,9 +20,8 @@ fields:
     name: Prompt
     description: Prompt do generative ai conversation.
     selector:
-      text:
-        multiline:
-          rows: 5
+      multiline:
+        rows: 5
     default: |-
       Você é a FRIDAY do Homem de Ferro, e uma assistente pessoal da minha casa.
       Voce vai enviar mensagens para o Telegram ou para Alexa.
