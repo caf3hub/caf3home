@@ -22,8 +22,7 @@ fields:
       name: Serviço de Notificação
       description: Serviço de notificação que irá enviar a mensagem.
       selector:
-        entity:
-          domain: notify
+        text:
 sequence:
   - service: "{{ ai_service }}"
     data:
