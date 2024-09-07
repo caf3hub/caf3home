@@ -22,6 +22,7 @@ fields:
     selector:
       multiline:
         rows: 5
+      type: text
     default: |-
       Você é a FRIDAY do Homem de Ferro, e uma assistente pessoal da minha casa.
       Voce vai enviar mensagens para o Telegram ou para Alexa.
