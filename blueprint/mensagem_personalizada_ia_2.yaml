@@ -1,6 +1,6 @@
 blueprint:
   name: Notificação Personalizada com IA Generativa
-  description: Gera uma mensagem personalizada com IA generativa e envia via serviço de notificação.
+  description: Gera uma mensagem personalizada com IA generativa e envia por um serviço de notificação.
   domain: script
 mode: queued
 fields:
