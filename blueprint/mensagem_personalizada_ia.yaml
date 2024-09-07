@@ -1,78 +1,48 @@
 blueprint:
   name: Enviar Mensagem Personalizada com IA Generativa
   description: Gera uma mensagem personalizada com IA generativa e envia via MQTT ou outro serviço de notificação.
-  domain: automation
-  input:
-    mensagem:
-      name: Mensagem
-      description: Texto que será utilizado como base para gerar a mensagem personalizada.
-      selector:
-        text: {}
-      required: true
-    ai_service:
-      name: Serviço de IA Generativa
-      description: O serviço de IA generativa a ser utilizado para criar a mensagem personalizada.
-      selector:
-        select:
-          options:
-            - google_generative_ai_conversation.generate_content
-            # Adicione outros serviços de IA generativa, se houver
-      required: true
-    notify_service:
+  domain: script
+mode: queued
+fields:
+  mensagem:
+    selector:
+      text: null
+    name: Mensagem
+    description: Texto que será utilizado como base para gerar a mensagem personalizada.
+    required: true
+  ai_service:
+    selector:
+      entity:
+        domain: conversation
+    name: Serviço de IA Generativa
+    required: true
+    default: []
+    description: O serviço de IA generativa a ser utilizado para criar a mensagem personalizada.
+  notification_target:
       name: Serviço de Notificação
-      description: O serviço de notificação para onde a mensagem será enviada.
+      description: Serviço de notificação que irá enviar a mensagem.
       selector:
-        select:
-          options:
-            - mqtt.publish
-            - notify.telegram
-            # Adicione outros serviços de notificação, se houver
-      required: true
-    mqtt_topic:
-      name: Tópico MQTT
-      description: O tópico MQTT para enviar a mensagem (apenas se o serviço de notificação for MQTT).
-      selector:
-        text: {}
-      required: false
+        entity:
+          domain: notify
+sequence:
+  - service: "{{ ai_service }}"
+    data:
+      prompt: >-
+        Você é o assistente pessoal da minha casa.
+        Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: "{{ mensagem }}".
+        Varie o estilo da mensagem a cada vez que for gerada.
+        Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois não funciona no Telegram.
+      response_variable: mensagem_personalizada
 
-  sequence:
-    - service: "{{ ai_service }}"
-      data:
-        prompt: >-
-          Você é o assistente pessoal da minha casa.
-          Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: "{{ mensagem }}".
-          Varie o estilo da mensagem a cada vez que for gerada.
-          Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois não funciona no Telegram.
-        response_variable: mensagem_personalizada
+  - delay:
+      seconds: 2
 
-    - delay:
-        seconds: 2
-
-    - choose:
-        - conditions:
-            - condition: template
-              value_template: "{{ notify_service == 'mqtt.publish' }}"
-          sequence:
-            - service: mqtt.publish
-              data:
-                topic: "{{ mqtt_topic }}"
-                qos: 0
-                retain: false
-                payload: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
-
-        - conditions:
-            - condition: template
-              value_template: "{{ notify_service == 'notify.telegram' }}"
-          sequence:
-            - service: notify.telegram
-              data:
-                message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
-
-    - choose:
-        - conditions:
-            - condition: template
-              value_template: "{{ notify_service == 'notify.alexa_media' }}"
-          sequence:
-            - service: notify.alexa_media
-              data:
-                message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ notification_target }}"
+        sequence:
+          - service: "{{ notification_target }}"
+            data:
+              message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
+icon: mdi:message
