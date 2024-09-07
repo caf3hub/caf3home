@@ -12,8 +12,7 @@ fields:
     required: true
   ai_service:
     selector:
-      entity:
-        domain: google_generative_ai_conversation
+        text:
     name: Serviço de IA Generativa
     required: true
     default: []
