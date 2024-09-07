@@ -13,18 +13,16 @@ fields:
   notification_target:
     name: Serviço de Notificação
     description: Serviço de notificação que irá enviar a mensagem.
-    required: true
     default: "notify.mqtt_notify"
     selector:
       text:
   prompt:
     name: Prompt
     description: Prompt do generative ai conversation.
-    required: true
     selector:
       text:
-        multiline: true
-        type: text
+        multiline:
+          rows: 5
     default: |-
       Você é a FRIDAY do Homem de Ferro, e uma assistente pessoal da minha casa.
       Voce vai enviar mensagens para o Telegram ou para Alexa.
