@@ -30,7 +30,6 @@ fields:
     selector:
       text:
         multiline: true
-        type: text
 sequence:
   - service: google_generative_ai_conversation.generate_content
     data:
