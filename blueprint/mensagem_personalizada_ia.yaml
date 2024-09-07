@@ -1,0 +1,64 @@
+blueprint:
+  name: Enviar Mensagem Personalizada com IA Generativa
+  description: Gera uma mensagem personalizada com IA generativa e envia via notificação.
+  domain: automation
+  input:
+    mensagem:
+      name: Mensagem
+      description: Texto que será utilizado como base para gerar a mensagem personalizada.
+      selector:
+        text: {}
+      required: true
+    generative_entity:
+      name: Entidade de IA Generativa
+      description: Entidade de IA generativa para criar a mensagem personalizada.
+      selector:
+        entity:
+          domain: google_generative_ai_conversation
+      required: true
+    notify_entity:
+      name: Entidade de Notificação
+      description: Entidade para onde a mensagem será enviada.
+      selector:
+        entity:
+          domain: notify
+      required: true
+    mqtt_topic:
+      name: Tópico MQTT
+      description: O tópico MQTT para enviar a mensagem (deixe em branco se não usar MQTT).
+      selector:
+        text: {}
+      required: false
+
+  sequence:
+    - service: "{{ generative_entity }}"
+      data:
+        prompt: >-
+          Você é o assistente pessoal da minha casa.
+          Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: "{{ mensagem }}".
+          Varie o estilo da mensagem a cada vez que for gerada.
+          Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois não funciona no Telegram.
+        response_variable: mensagem_personalizada
+
+    - delay:
+        seconds: 2
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ mqtt_topic }}"
+          sequence:
+            - service: mqtt.publish
+              data:
+                topic: "{{ mqtt_topic }}"
+                qos: 0
+                retain: false
+                payload: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
+
+        - conditions:
+            - condition: template
+              value_template: "{{ notify_entity }}"
+          sequence:
+            - service: "{{ notify_entity }}"
+              data:
+                message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
