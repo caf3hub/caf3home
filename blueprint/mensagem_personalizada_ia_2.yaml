@@ -34,7 +34,7 @@ sequence:
   - service: google_generative_ai_conversation.generate_content
     data:
       prompt: >-
-        "{{ prompt }}"
+        {{ prompt }}
     response_variable: mensagem_personalizada
   - delay:
       seconds: 2
