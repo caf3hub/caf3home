@@ -27,7 +27,6 @@ fields:
         max: 1
         step: 0.1
     default: 0.6
-    required: true
     name: Volume do Anúncio
     description: Defina o volume do anúncio (padrão 60%).
 sequence:
