@@ -30,7 +30,7 @@ sequence:
         Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: "{{ mensagem }}".
         Varie o estilo da mensagem a cada vez que for gerada.
         Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois não funciona no Telegram.
-      response_variable: mensagem_personalizada
+    response_variable: mensagem_personalizada
 
   - delay:
       seconds: 2
