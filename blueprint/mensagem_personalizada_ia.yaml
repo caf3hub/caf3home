@@ -1,31 +1,31 @@
 blueprint:
   name: Enviar Mensagem Personalizada com IA Generativa
-  description: Gera uma mensagem personalizada com IA generativa e envia via notificação.
+  description: Gera uma mensagem personalizada com IA generativa e envia via notificação ou MQTT.
   domain: automation
   input:
     mensagem:
       name: Mensagem
-      description: Texto que será utilizado como base para gerar a mensagem personalizada.
+      description: Texto base para gerar a mensagem personalizada.
       selector:
         text: {}
       required: true
     generative_entity:
       name: Entidade de IA Generativa
-      description: Entidade de IA generativa para criar a mensagem personalizada.
+      description: Entidade para gerar a mensagem personalizada.
       selector:
         entity:
           domain: google_generative_ai_conversation
       required: true
     notify_entity:
       name: Entidade de Notificação
-      description: Entidade para onde a mensagem será enviada.
+      description: Entidade que receberá a mensagem.
       selector:
         entity:
           domain: notify
-      required: true
+      required: false
     mqtt_topic:
       name: Tópico MQTT
-      description: O tópico MQTT para enviar a mensagem (deixe em branco se não usar MQTT).
+      description: Tópico MQTT para enviar a mensagem (deixe em branco se não usar MQTT).
       selector:
         text: {}
       required: false
@@ -40,8 +40,7 @@ blueprint:
           Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois não funciona no Telegram.
         response_variable: mensagem_personalizada
 
-    - delay:
-        seconds: 2
+    - delay: "00:00:02"
 
     - choose:
         - conditions:
