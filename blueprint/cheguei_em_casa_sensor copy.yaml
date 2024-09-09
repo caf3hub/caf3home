@@ -60,17 +60,18 @@ trigger:
 variables:
   ia_prompt: !input ia_prompt
   check_time: !input check_time
+  check_entities: !input check_entities
 
 condition:
   - condition: template
     value_template: >
-      {% set check_time_seconds = (check_time * 60) %}
+      {% set check_time_seconds = check_time * 60 %}
       {% set now = utcnow() %}
-      {% set entities = states | selectattr('entity_id', 'in', {{ check_entities }} | map(attribute='entity_id') | list) | list %}
+      {% set entities = check_entities %}
       {% for entity in entities %}
-        {% set state = states[entity.entity_id].state %}
-        {% set last_changed = states[entity.entity_id].last_changed %}
-        {% if state != 'off' or last_changed > (now - timedelta(seconds=check_time_seconds)) %}
+        {% set state = states[entity].state %}
+        {% set last_changed = states[entity].last_changed %}
+        {% if state != 'off' or (now - last_changed).total_seconds() <= check_time_seconds %}
           {{ false }}
         {% endif %}
       {% endfor %}
@@ -87,11 +88,12 @@ action:
     data:
       prompt: >-
         Você é a FRIDAY do Homem de Ferro, e uma assistente pessoal da minha casa.
+        O nome do seu mestre e pai é Ruan.
         Você vai enviar mensagens para o Telegram ou para Alexa.
         Varie o estilo da mensagem a cada vez que for gerada.
         Não quero sugestões, mande apenas uma mensagem.
         Não envie "\n" e nem tente fazer quebras de linha assim, pois não funciona no Telegram.
-        Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: "{{ ia_prompt }}"
+        Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar: "{{ ia_prompt }}"
     response_variable: mensagem_personalizada
 
   - delay: 2
