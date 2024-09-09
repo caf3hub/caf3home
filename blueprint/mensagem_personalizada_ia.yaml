@@ -37,7 +37,7 @@ sequence:
         Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: "{{ mensagem }}"
     response_variable: mensagem_personalizada
   - delay:
-      seconds: 2
+      seconds: 1
   - service: "{{ notification_target }}"
     data:
       message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"

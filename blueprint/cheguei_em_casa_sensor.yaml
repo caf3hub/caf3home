@@ -40,17 +40,18 @@ blueprint:
     notification_entity:
       name: Serviço de Notificação
       description: "Serviço de notificação que irá enviar a mensagem."
-      default: "notify.mqtt_notify"
+      default: "notify.alexa_media_area_echo"
       selector:
-        entity:
-          domain: notify
+        text:
     ia_prompt:
       name: Prompt IA Generativa
       description: "Prompt personalizado para a IA gerar a mensagem."
       selector:
         text:
+          multiline: true
       default: >-
-        Cheguei em casa!
+        Seu mestre chegou em casa, dê as boas vindas e diga que o cachorro tambem está feliz.
+        ex: Bem vindo mestre, seu cachorro está feliz por você já está aqui.
 
 trigger:
   - platform: state
@@ -78,11 +79,6 @@ condition:
       {{ true }}
 
 action:
-  - alias: Ativar dispositivos ao chegar
-    service: homeassistant.turn_on
-    target:
-      entity_id: !input devices_to_activate
-
   - alias: Gerar mensagem personalizada com IA
     service: google_generative_ai_conversation.generate_content
     data:
@@ -96,7 +92,10 @@ action:
         Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar: "{{ ia_prompt }}"
     response_variable: mensagem_personalizada
 
-  - delay: 1
+  - alias: Ativar dispositivos ao chegar
+    service: homeassistant.turn_on
+    target:
+      entity_id: !input devices_to_activate
 
   - alias: Enviar notificação
     service: !input notification_entity
