@@ -42,10 +42,11 @@ blueprint:
       description: Serviço de notificação que irá enviar a mensagem.
       default: "notify.mqtt_notify"
       selector:
-        text:
+        entity:
+          domain: notify
     ia_prompt:
       name: Prompt IA Generativa
-      description: Prompt personalizado para a IA gerar a mensagem."
+      description: "Prompt personalizado para a IA gerar a mensagem."
       selector:
         text:
       default: >-
