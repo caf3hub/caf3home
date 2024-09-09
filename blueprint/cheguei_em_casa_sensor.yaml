@@ -1,0 +1,93 @@
+blueprint:
+  name: Chegada em Casa - Automação de Boas-Vindas com IA Generativa
+  description: "Liga dispositivos ao chegar em casa e envia notificação personalizada com IA."
+  domain: automation
+  input:
+    trigger_entity:
+      name: Entidade que dispara a automação
+      description: "Entidade que acionará a automação (ex: sensor de porta)."
+      selector:
+        entity:
+    check_entities:
+      name: Entidades a serem verificadas
+      description: "Entidades que devem estar desligadas por um tempo para acionar (ex: lâmpadas, tomadas)."
+      selector:
+        entity:
+          multiple: true
+          domain: 
+            - light
+            - switch
+    check_time:
+      name: Tempo mínimo desligado (minutos)
+      description: "Tempo mínimo que as entidades devem estar desligadas."
+      selector:
+        number:
+          min: 1
+          max: 60
+          unit_of_measurement: minutes
+          mode: slider
+    devices_to_activate:
+      name: Dispositivos para ligar ao chegar
+      description: "Entidades que serão ligadas ao chegar (ex: luzes, switches, scripts)."
+      selector:
+        entity:
+          multiple: true
+          domain:
+            - light
+            - switch
+            - script
+            - automation
+    notification_entity:
+      name: Serviço de Notificação
+      description: Serviço de notificação que irá enviar a mensagem.
+      default: "notify.mqtt_notify"
+      selector:
+        text:
+    ia_prompt:
+      name: Prompt IA Generativa
+      description: Prompt personalizado para a IA gerar a mensagem."
+      selector:
+        text:
+        multiline: true
+      default: >-
+        Cheguei em casa!
+
+trigger:
+  - platform: state
+    entity_id: !input trigger_entity
+    to: "on"
+
+condition:
+  - condition: template
+    value_template: >
+      {%- set entities = !input check_entities %}
+      {%- set check_time = !input check_time %}
+      {%- for entity in entities %}
+      {{ states[entity].state == 'off' and (as_timestamp(now()) - as_timestamp(states[entity].last_changed)) > (check_time * 60) }} and
+      {%- endfor %}
+      true
+
+action:
+  - alias: Ativar dispositivos ao chegar
+    service: homeassistant.turn_on
+    target:
+      entity_id: !input devices_to_activate
+
+  - alias: Gerar mensagem personalizada com IA
+    service: google_generative_ai_conversation.generate_content
+    data:
+      prompt: >-
+        Você é a FRIDAY do Homem de Ferro, e uma assistente pessoal da minha casa.
+        Voce vai enviar mensagens para o Telegram ou para Alexa.
+        Varie o estilo da mensagem a cada vez que for gerada.
+        Não quero sugestões, mande apenas uma mensagem.
+        Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois nao funciona no telegram.
+        Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: {{ !input ia_prompt }}
+    response_variable: mensagem_personalizada
+
+  - delay: 2
+
+  - alias: Enviar notificação
+    service: !input notification_entity
+    data:
+      message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
