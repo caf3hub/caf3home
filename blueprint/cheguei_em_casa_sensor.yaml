@@ -54,7 +54,7 @@ blueprint:
 
 variables:
   ia_prompt: !input ia_prompt
-  check_time: !input check_time | int
+  check_time: !input check_time
   now: "{{ utcnow() }}"
   threshold: "{{ now - timedelta(minutes=check_time) }}"
   entities: "{{ expand(!input check_entities) }}"
@@ -67,10 +67,11 @@ trigger:
 condition:
   - condition: template
     value_template: >
+      {% set check_time_seconds = check_time * 60 %}
       {% for entity in entities %}
-        {% set state = entity.state %}
-        {% set last_changed = entity.last_changed %}
-        {% if state != 'off' or last_changed > threshold %}
+        {% set state = states[entity.entity_id].state %}
+        {% set last_changed = states[entity.entity_id].last_changed %}
+        {% if state != 'off' or last_changed > (now - timedelta(seconds=check_time_seconds)) %}
           {{ false }}
         {% endif %}
       {% endfor %}
