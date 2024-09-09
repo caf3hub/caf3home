@@ -48,7 +48,6 @@ blueprint:
       description: Prompt personalizado para a IA gerar a mensagem."
       selector:
         text:
-          multiline: true
       default: >-
         Cheguei em casa!
       
