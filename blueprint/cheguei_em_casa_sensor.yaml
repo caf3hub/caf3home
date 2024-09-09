@@ -57,16 +57,21 @@ trigger:
     entity_id: !input trigger_entity
     to: "on"
 
+variables:
+  ia_prompt: !input ia_prompt
+  check_time: !input check_time
+  check_entities: !input check_entities
+
 condition:
   - condition: template
     value_template: >
-      {% set check_time_seconds = (check_time * 60) %}
+      {% set check_time_seconds = check_time * 60 %}
       {% set now = utcnow() %}
-      {% set entities = states | selectattr('entity_id', 'in', !input check_entities | map(attribute='entity_id') | list) | list %}
+      {% set entities = check_entities %}
       {% for entity in entities %}
-        {% set state = states[entity.entity_id].state %}
-        {% set last_changed = states[entity.entity_id].last_changed %}
-        {% if state != 'off' or last_changed > (now - timedelta(seconds=check_time_seconds)) %}
+        {% set state = states[entity].state %}
+        {% set last_changed = states[entity].last_changed %}
+        {% if state != 'off' or (now - last_changed).total_seconds() <= check_time_seconds %}
           {{ false }}
         {% endif %}
       {% endfor %}
