@@ -39,7 +39,7 @@ blueprint:
             - automation
     notification_entity:
       name: Serviço de Notificação
-      description: Serviço de notificação que irá enviar a mensagem."
+      description: "Serviço de notificação que irá enviar a mensagem."
       default: "notify.mqtt_notify"
       selector:
         entity:
@@ -60,11 +60,15 @@ trigger:
 condition:
   - condition: template
     value_template: >
-      {% set entities = (input.check_entities | list) %}
-      {% set check_time = input.check_time %}
-      {% for entity in entities %}
-      {{ states(entity).state == 'off' and (as_timestamp(now()) - as_timestamp(states(entity).last_changed)) > (check_time * 60) }}
+      {%- set entities = states | selectattr('entity_id', 'in', check_entities) | list %}
+      {%- set check_time = check_time %}
+      {% set condition_met = true %}
+      {%- for entity in entities %}
+        {%- if states(entity).state != 'off' or (as_timestamp(now()) - as_timestamp(states(entity).last_changed)) < (check_time * 60) %}
+          {% set condition_met = false %}
+        {%- endif %}
       {%- endfor %}
+      {{ condition_met }}
 
 action:
   - alias: Ativar dispositivos ao chegar
@@ -77,11 +81,11 @@ action:
     data:
       prompt: >-
         Você é a FRIDAY do Homem de Ferro, e uma assistente pessoal da minha casa.
-        Voce vai enviar mensagens para o Telegram ou para Alexa.
+        Você vai enviar mensagens para o Telegram ou para Alexa.
         Varie o estilo da mensagem a cada vez que for gerada.
         Não quero sugestões, mande apenas uma mensagem.
-        Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois nao funciona no telegram.
-        Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: {{ input.ia_prompt }}
+        Não envie "\n" e nem tente fazer quebras de linha assim, pois não funciona no Telegram.
+        Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que: {{ ia_prompt }}
     response_variable: mensagem_personalizada
 
   - delay: 2
