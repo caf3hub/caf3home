@@ -48,10 +48,10 @@ blueprint:
       description: Prompt personalizado para a IA gerar a mensagem."
       selector:
         text:
-        multiline: true
+          multiline: true
       default: >-
         Cheguei em casa!
-
+      
 trigger:
   - platform: state
     entity_id: !input trigger_entity
