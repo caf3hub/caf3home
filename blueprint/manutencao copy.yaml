@@ -57,15 +57,15 @@ action:
       sequence:
         - service: mqtt.publish
           data:
-            topic: !input script_topic
+            topic: !input.script_topic
             payload: "{{ script_list[repeat.index] }}"
           
         - wait_for_trigger:
             - platform: mqtt
-              topic: !input status_topic
+              topic: !input.status_topic
               payload: "{{ script_list[repeat.index] }}: Sucesso"
             - platform: mqtt
-              topic: !input status_topic
+              topic: !input.status_topic
               payload: "{{ script_list[repeat.index] }}: Falhou"
           
         - choose:
@@ -73,13 +73,13 @@ action:
                 - condition: template
                   value_template: "{{ trigger.payload == (script_list[repeat.index] + ': Sucesso') }}"
               sequence:
-                - service: notify.notify_target
+                - service: !input.notify_target
                   data:
                     message: "O script {{ script_list[repeat.index] }} foi executado com sucesso."
             - conditions:
                 - condition: template
                   value_template: "{{ trigger.payload == (script_list[repeat.index] + ': Falhou') }}"
               sequence:
-                - service: notify.notify_target
+                - service: !input.notify_target
                   data:
                     message: "Falha ao executar o script {{ script_list[repeat.index] }}."
