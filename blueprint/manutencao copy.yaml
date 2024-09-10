@@ -26,10 +26,13 @@ blueprint:
         action:
     script_names:
       name: Nomes dos Scripts
-      description: Nomes dos scripts para publicar no tópico MQTT em ordem de execução, separados por vírgula
-      default: ""
+      description: Lista de nomes dos scripts para publicar no tópico MQTT em ordem de execução
+      default: []
       selector:
-        text:
+        list:
+          element:
+            type: str
+          multiple: true
         
 trigger:
   - platform: homeassistant
@@ -39,14 +42,14 @@ action:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ not pre_execution_actions | length == 0 }}"
+            value_template: "{{ pre_execution_actions | length > 0 }}"
         sequence:
           - service: homeassistant.trigger
             target:
               entity_id: !input pre_execution_actions
 
   - variables:
-      script_list: "{{ (script_names | split(',')) | map('trim') | list }}"
+      script_list: "{{ script_names }}"
 
   - repeat:
       count: "{{ script_list | length }}"
