@@ -1,6 +1,6 @@
 blueprint:
   name: Execução Sequencial de Scripts com MQTT e Notificações
-  description: Executa scripts via MQTT em ordem, notifica e verifica o status dos scripts, com opções para executar automações ou scripts do Home Assistant.
+  description: Executa scripts via MQTT em ordem, notifica e verifica o status dos scripts, com opções para executar automações ou scripts do Home Assistant antes de publicar no tópico MQTT.
   domain: automation
   input:
     notify_target:
@@ -39,15 +39,15 @@ action:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ not pre_execution_actions | length == 0 }}"
+            value_template: "{{ pre_execution_actions | length > 0 }}"
         sequence:
-          - service: automation.trigger
+          - service: homeassistant.trigger
             target:
               entity_id: !input pre_execution_actions
 
   - variables:
-      script_list: !input script_names | split(',')
-      
+      script_list: "{{ script_names.split(',') | map('trim') | list }}"
+
   - repeat:
       count: "{{ script_list | length }}"
       sequence:
@@ -66,17 +66,15 @@ action:
           
         - choose:
             - conditions:
-                - condition: mqtt
-                  topic: !input status_topic
-                  payload: "{{ script_list[repeat.index] }}: Sucesso"
+                - condition: template
+                  value_template: "{{ trigger.payload == (script_list[repeat.index] + ': Sucesso') }}"
               sequence:
                 - service: notify.notify_target
                   data:
                     message: "O script {{ script_list[repeat.index] }} foi executado com sucesso."
             - conditions:
-                - condition: mqtt
-                  topic: !input status_topic
-                  payload: "{{ script_list[repeat.index] }}: Falhou"
+                - condition: template
+                  value_template: "{{ trigger.payload == (script_list[repeat.index] + ': Falhou') }}"
               sequence:
                 - service: notify.notify_target
                   data:
