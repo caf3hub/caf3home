@@ -1,87 +1,77 @@
 blueprint:
-  name: Execução Sequencial de Scripts com MQTT e Notificações
-  description: Executa scripts via MQTT em ordem, notifica e verifica o status dos scripts, com opções para executar automações ou scripts do Home Assistant antes de publicar no tópico MQTT.
+  name: Verificação de Scripts e Automação via MQTT
+  description: Executa scripts via MQTT, aguarda status e notifica sobre o sucesso ou falha.
   domain: automation
   input:
-    notify_target:
-      name: Notificação
-      description: Entidade de notificação para enviar as mensagens
-      selector:
-        entity:
-          domain: notify
+    notify_service:
+      name: Serviço de Notificação
+      description: Serviço de notificação que será usado para avisos de sucesso ou falha.
       default: notify.mqtt_notify
-    status_topic:
-      name: Tópico de Status
-      description: Tópico MQTT para verificar o status dos scripts
-      default: home/script/status
-    script_topic:
-      name: Tópico de Scripts
-      description: Tópico MQTT para publicar o nome dos scripts
-      default: home/script
-    pre_execution_actions:
-      name: Ações Antes da Execução
-      description: Automação ou scripts do Home Assistant para executar antes da publicação no tópico MQTT
-      default: []
       selector:
-        action:
+        action: {}
     script_names:
       name: Nomes dos Scripts
-      description: Liste os nomes dos scripts, um por linha.
-      default: ""
+      description: Lista de nomes dos scripts a serem executados e verificados via MQTT.
       selector:
-        text:
-          multiline: true
+        object:
+          multiple: true
+          type: str
+    delay_between:
+      name: Delay entre Scripts
+      description: Tempo de espera (em segundos) entre a execução de cada script.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: seconds
+          mode: slider
+    status_topic:
+      name: Tópico de Status
+      description: Tópico MQTT para receber o status dos scripts.
+      default: home/script/status
+      selector:
+        text: {}
+    script_topic:
+      name: Tópico de Scripts
+      description: Tópico MQTT para publicar os nomes dos scripts.
+      default: home/script
+      selector:
+        text: {}
 
 trigger:
   - platform: homeassistant
     event: start
 
 action:
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ pre_execution_actions | length > 0 }}"
-        sequence:
-          - service: homeassistant.trigger
-            target:
-              entity_id: !input pre_execution_actions
-
-  - variables:
-      # Construir a lista de scripts a partir das entradas
-      script_names_input: "{{ states('input.script_names') }}"
-      script_list: >
-        {% set names = script_names_input.split('\n') %}
-        {% set trimmed_names = names | map('trim') %}
-        {{ trimmed_names | select('!=', '') | list }}
-
   - repeat:
-      count: "{{ script_list | length }}"
+      count: "{{ script_names | length }}"
       sequence:
         - service: mqtt.publish
           data:
             topic: !input script_topic
-            payload: "{{ script_list[repeat.index] }}"
-          
+            payload: "{{ script_names[repeat.index - 1] }}"
         - wait_for_trigger:
             - platform: mqtt
               topic: !input status_topic
-              payload: "{{ script_list[repeat.index] }}: Sucesso"
+              payload: "{{ script_names[repeat.index - 1] }}: Sucesso"
             - platform: mqtt
               topic: !input status_topic
-              payload: "{{ script_list[repeat.index] }}: Falhou"
-          
+              payload: "{{ script_names[repeat.index - 1] }}: Falhou"
         - choose:
             - conditions:
                 - condition: template
-                  value_template: "{{ trigger.payload == (script_list[repeat.index] + ': Sucesso') }}"
+                  value_template: "{{ trigger.payload == script_names[repeat.index - 1] ~ ': Sucesso' }}"
               sequence:
-                - service: notify.notify_target
+                - service: !input notify_service
                   data:
-                    message: "O script {{ script_list[repeat.index] }} foi executado com sucesso."
+                    message: "{{ script_names[repeat.index - 1] }} realizado com sucesso."
             - conditions:
                 - condition: template
-                  value_template: "{{ trigger.payload == (script_list[repeat.index] + ': Falhou') }}"
+                  value_template: "{{ trigger.payload == script_names[repeat.index - 1] ~ ': Falhou' }}"
               sequence:
-                - service: notify.notify_target
+                - service: !input notify_service
                   data:
-                    message: "Falha ao executar o script {{ script_list[repeat.index] }}."
+                    message: "Falha ao executar {{ script_names[repeat.index - 1] }}."
+        - delay:
+            seconds: !input delay_between
