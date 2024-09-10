@@ -24,14 +24,38 @@ blueprint:
       default: []
       selector:
         action:
-    script_names:
-      name: Nomes dos Scripts
-      description: Lista de nomes dos scripts para publicar no tópico MQTT em ordem de execução, separados por linha
+    script_name_1:
+      name: Nome do Script 1
+      description: Nome do primeiro script para publicar no tópico MQTT
       default: ""
       selector:
-        text:
-          multiline: true
-        
+        text: {}
+    script_name_2:
+      name: Nome do Script 2
+      description: Nome do segundo script para publicar no tópico MQTT
+      default: ""
+      selector:
+        text: {}
+    script_name_3:
+      name: Nome do Script 3
+      description: Nome do terceiro script para publicar no tópico MQTT
+      default: ""
+      selector:
+        text: {}
+    script_name_4:
+      name: Nome do Script 4
+      description: Nome do quarto script para publicar no tópico MQTT
+      default: ""
+      selector:
+        text: {}
+    script_name_5:
+      name: Nome do Script 5
+      description: Nome do quinto script para publicar no tópico MQTT
+      default: ""
+      selector:
+        text: {}
+    # Adicione mais campos conforme necessário
+
 trigger:
   - platform: homeassistant
     event: start
@@ -47,8 +71,17 @@ action:
               entity_id: !input pre_execution_actions
 
   - variables:
-      # Converter o texto em uma lista
-      script_list: "{{ script_names.split('\n') | map('trim') | list }}"
+      # Construir a lista de scripts a partir das entradas
+      script_list: >
+        {% set names = [
+          (input.script_name_1 | default('')).strip(),
+          (input.script_name_2 | default('')).strip(),
+          (input.script_name_3 | default('')).strip(),
+          (input.script_name_4 | default('')).strip(),
+          (input.script_name_5 | default('')).strip()
+          # Adicione mais entradas conforme necessário
+        ] %}
+        {{ names | select('!=', '') | list }}
 
   - repeat:
       count: "{{ script_list | length }}"
