@@ -26,10 +26,11 @@ blueprint:
         action:
     script_names:
       name: Nomes dos Scripts
-      description: Nomes dos scripts para publicar no tópico MQTT em ordem de execução, separados por vírgula
+      description: Lista de nomes dos scripts para publicar no tópico MQTT em ordem de execução, separados por linha
       default: ""
       selector:
         text:
+          multiline: true
         
 trigger:
   - platform: homeassistant
@@ -46,7 +47,8 @@ action:
               entity_id: !input pre_execution_actions
 
   - variables:
-      script_list: "{{ script_names.split(',') | map('trim') | list }}"
+      # Converter o texto em uma lista
+      script_list: "{{ script_names.split('\n') | map('trim') | list }}"
 
   - repeat:
       count: "{{ script_list | length }}"
