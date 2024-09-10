@@ -51,7 +51,8 @@ action:
       script_names_input: "{{ states('input.script_names') }}"
       script_list: >
         {% set names = script_names_input.split('\n') %}
-        {{ names | select('!=', '') | list }}
+        {% set trimmed_names = names | map('trim') %}
+        {{ trimmed_names | select('!=', '') | list }}
 
   - repeat:
       count: "{{ script_list | length }}"
