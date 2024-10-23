@@ -20,43 +20,53 @@ blueprint:
         text:
           multiline: true
 
-variables:
-  lembretes_raw: !input lembretes
-  lembretes_lines: "{{ lembretes_raw.split('\n') }}"
-  reminder_list: >
-    {% set lembretes = [] %}
-    {% for line in lembretes_lines %}
-      {% set parts = line.split(',') %}
-      {% if parts | length == 3 %}
-        {% set lembrete = {
-          "nome_remedio": parts[0].strip(),
-          "horario_remedio": parts[1].strip(),
-          "descricao_remedio": parts[2].strip()
-        } %}
-        {% set lembretes = lembretes + [lembrete] %}
-      {% endif %}
-    {% endfor %}
-    {{ lembretes }}
-
 trigger:
   - platform: time_pattern
-    minutes: "/1"  # Verifica a cada minuto se há um lembrete
+    minutes: "/1"  # Verifica a cada minuto
+
+condition:
+  - condition: template
+    value_template: >
+      {% set lembretes_raw = input.lembretes %}
+      {% set lembretes_lines = lembretes_raw.split('\n') %}
+      {% for line in lembretes_lines %}
+        {% set parts = line.split(',') %}
+        {% if parts | length == 3 %}
+          {% set horario_remedio = parts[1].strip() %}
+          {% if (now().strftime('%H:%M') == horario_remedio) %}
+            {{ true }}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      {{ false }}
 
 action:
+  - variables:
+      lembretes_raw: !input lembretes
+      lembretes_lines: "{{ lembretes_raw.split('\n') }}"
+      reminder_list: >
+        {% set lembretes = [] %}
+        {% for line in lembretes_lines %}
+          {% set parts = line.split(',') %}
+          {% if parts | length == 3 %}
+            {% set lembrete = {
+              "nome_remedio": parts[0].strip(),
+              "horario_remedio": parts[1].strip(),
+              "descricao_remedio": parts[2].strip()
+            } %}
+            {% set lembretes = lembretes + [lembrete] %}
+          {% endif %}
+        {% endfor %}
+        {{ lembretes }}
   - repeat:
       count: "{{ reminder_list | length }}"
       sequence:
         - variables:
             reminder: "{{ reminder_list[repeat.index] }}"
-        - choose:
-            - conditions: 
-                - condition: template
-                  value_template: "{{ now().strftime('%H:%M') == reminder.horario_remedio }}"
-              sequence:
-                - service: "{{ notify_service }}"
-                  data:
-                    message: >
-                      Lembrete de remédio: 
-                      - Nome: {{ reminder.nome_remedio }}
-                      - Horário: {{ reminder.horario_remedio }}
-                      - Descrição: {{ reminder.descricao_remedio }}
+        - service: "{{ notify_service }}"
+          data:
+            message: >
+              Lembrete de remédio: 
+              - Nome: {{ reminder.nome_remedio }}
+              - Horário: {{ reminder.horario_remedio }}
+              - Descrição: {{ reminder.descricao_remedio }}
