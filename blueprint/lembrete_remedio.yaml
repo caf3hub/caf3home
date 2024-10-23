@@ -1,6 +1,6 @@
 blueprint:
-  name: Lembrete de Remédio
-  description: "Cria lembretes de remédios com nome, horário e descrição."
+  name: Lembrete de Remédio Dinâmico
+  description: "Cria lembretes de remédios de maneira flexível, permitindo adicionar e remover quantos lembretes desejar."
   domain: automation
   input:
     notify_service:
@@ -8,15 +8,15 @@ blueprint:
       description: "Serviço de notificação para enviar o lembrete."
       default: "notify.mqtt_notify"
       selector:
-        text:
+        text: {}
 
-    reminder_list:
-      name: Lista de Lembretes de Remédio
-      description: "Adicione quantos lembretes de remédio desejar."
+    lembretes:
+      name: Lembretes de Remédio
+      description: "Adicione quantos lembretes de remédio quiser, com nome, horário e descrição."
       selector:
         object:
           multiple: true
-          properties:
+          label:
             nome_remedio:
               name: Nome do Remédio
               selector:
@@ -29,16 +29,18 @@ blueprint:
 
             descricao_remedio:
               name: Descrição do Remédio
-              description: "Adicione uma descrição, como a dosagem (ex: 1 comprimido, etc.)"
               selector:
                 text: {}
 
 variables:
-  reminders: !input reminder_list
+  reminders: !input lembretes
 
 trigger:
-  - platform: time
-    at: "{{ reminder.horario_remedio }}"
+  # Gera um trigger para cada lembrete baseado no horário
+  - platform: template
+    value_template: "{{ (reminders | map(attribute='horario_remedio') | list) | join(', ') }}"
+
+condition: []
 
 action:
   - repeat:
