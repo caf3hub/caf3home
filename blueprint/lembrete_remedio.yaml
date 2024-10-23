@@ -6,9 +6,9 @@ blueprint:
     notify_service:
       name: Serviço de notificação
       description: "Serviço de notificação para enviar o lembrete."
+      default: "notify.mqtt_notify"
       selector:
-        entity:
-          domain: notify
+        text:
 
     reminder_list:
       name: Lista de Lembretes de Remédio
