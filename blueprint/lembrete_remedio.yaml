@@ -1,5 +1,5 @@
 blueprint:
-  name: Lembrete de Remédio com Entrada de Texto
+  name: Lembrete de Remédio
   description: "Cria lembretes de remédios a partir de uma lista formatada manualmente com nome, horário e descrição."
   domain: automation
   input:
@@ -21,25 +21,24 @@ blueprint:
           multiline: true
 
 variables:
-  reminder_list: |
-    {% set lembretes_raw = !input lembretes %}
-    {% set lembretes_lines = lembretes_raw.split('\n') %}
+  lembretes_raw: !input lembretes
+  lembretes_lines: "{{ lembretes_raw.split('\n') }}"
+  reminder_list: >
     {% set lembretes = [] %}
     {% for line in lembretes_lines %}
       {% set parts = line.split(',') %}
-      {% if parts|length == 3 %}
+      {% if parts | length == 3 %}
         {% set lembrete = {
           "nome_remedio": parts[0].strip(),
           "horario_remedio": parts[1].strip(),
           "descricao_remedio": parts[2].strip()
         } %}
-        {% set lembretes = lembretes + [lembrete] %}
+        {% do lembretes.append(lembrete) %}
       {% endif %}
     {% endfor %}
     {{ lembretes }}
 
 trigger:
-  # Gera um trigger para cada lembrete baseado no horário
   - platform: time_pattern
     minutes: "/1"  # Verifica a cada minuto se há um lembrete
 
