@@ -1,0 +1,60 @@
+blueprint:
+  name: Lembrete de Remédio com Entrada de Texto
+  description: "Cria lembretes de remédios a partir de uma lista formatada manualmente com nome, horário e descrição."
+  domain: automation
+  input:
+    notify_service:
+      name: Serviço de notificação
+      description: "Serviço de notificação para enviar o lembrete."
+      default: "notify.mqtt_notify"
+      selector:
+        text: {}
+
+    lembretes:
+      name: Lembretes
+      description: >
+        Adicione os lembretes no formato:
+        nome_remedio_1, HH:MM, descricao_remedio_1
+        nome_remedio_2, HH:MM, descricao_remedio_2
+      selector:
+        text:
+          multiline: true
+
+variables:
+  lembretes_raw: !input lembretes
+  lembretes_lines: "{{ lembretes_raw.split('\n') }}"
+  reminder_list: >
+    {% set lembretes = [] %}
+    {% for line in lembretes_lines %}
+      {% set parts = line.split(',') %}
+      {% if parts | length == 3 %}
+        {% set lembrete = {
+          "nome_remedio": parts[0].strip(),
+          "horario_remedio": parts[1].strip(),
+          "descricao_remedio": parts[2].strip()
+        } %}
+        {% set lembretes = lembretes + [lembrete] %}
+      {% endif %}
+    {% endfor %}
+    {{ lembretes }}
+
+trigger:
+  - platform: time_pattern
+    minutes: "/1"  # Verifica a cada minuto se há um lembrete
+
+action:
+  - repeat:
+      count: "{{ reminder_list | length }}"
+      sequence:
+        - variables:
+            reminder: "{{ reminder_list[repeat.index] }}"
+        - choose:
+            - conditions: "{{ now().strftime('%H:%M') == reminder.horario_remedio }}"
+              sequence:
+                - service: !input notify_service
+                  data:
+                    message: >
+                      Lembrete de remédio: 
+                      - Nome: {{ reminder.nome_remedio }}
+                      - Horário: {{ reminder.horario_remedio }}
+                      - Descrição: {{ reminder.descricao_remedio }}
