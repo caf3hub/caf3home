@@ -1,5 +1,5 @@
 blueprint:
-  name: Lembrete de Remédio
+  name: Lembrete de Remédio com Entrada de Texto
   description: "Cria lembretes de remédios a partir de uma lista formatada manualmente com nome, horário e descrição."
   domain: automation
   input:
@@ -33,7 +33,7 @@ variables:
           "horario_remedio": parts[1].strip(),
           "descricao_remedio": parts[2].strip()
         } %}
-        {% do lembretes.append(lembrete) %}
+        {% set lembretes = lembretes + [lembrete] %}
       {% endif %}
     {% endfor %}
     {{ lembretes }}
