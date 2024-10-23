@@ -5,17 +5,17 @@ blueprint:
   input:
     notify_service:
       name: Serviço de notificação
-      description: "Serviço de notificação para enviar o lembrete"
+      description: "Serviço de notificação para enviar o lembrete."
       selector:
-        action:
-          default:
-            service: notify.mqtt_notify
+        entity:
+          domain: notify
 
     reminder_list:
       name: Lista de Lembretes de Remédio
       description: "Adicione quantos lembretes de remédio desejar."
       selector:
         object:
+          multiple: true
           properties:
             nome_remedio:
               name: Nome do Remédio
@@ -37,12 +37,8 @@ variables:
   reminders: !input reminder_list
 
 trigger:
-  platform: time
-  for:
-    hours: 0
-    minutes: 0
-    seconds: 0
-  at: "{{ reminder.horario_remedio }}"
+  - platform: time
+    at: "{{ reminder.horario_remedio }}"
 
 action:
   - repeat:
@@ -51,7 +47,7 @@ action:
         - variables:
             reminder: "{{ reminders[repeat.index] }}"
         - choose:
-            - conditions: "{{ now().strftime('%H:%M:%S') == reminder.horario_remedio }}"
+            - conditions: "{{ now().strftime('%H:%M') == reminder.horario_remedio }}"
               sequence:
                 - service: !input notify_service
                   data:
