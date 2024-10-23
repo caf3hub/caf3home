@@ -48,8 +48,12 @@ action:
       sequence:
         - variables:
             reminder: "{{ reminder_list[repeat.index] }}"
+        - service: persistent_notification.create
+          data:
+            message: "Reminder: {{ reminder }}"
+
         - choose:
-            - conditions: 
+            - conditions:
                 - condition: template
                   value_template: "{{ now().strftime('%H:%M') == reminder.horario_remedio }}"
               sequence:
@@ -60,3 +64,4 @@ action:
                       - Nome: {{ reminder.nome_remedio }}
                       - Horário: {{ reminder.horario_remedio }}
                       - Descrição: {{ reminder.descricao_remedio }}
+
