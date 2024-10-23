@@ -27,7 +27,7 @@ trigger:
 condition:
   - condition: template
     value_template: >
-      {% set lembretes_raw = input.lembretes %}
+      {% set lembretes_raw = state_attr('automation.lembrete_de_remedio_com_entrada_de_texto', 'lembretes') %}
       {% set lembretes_lines = lembretes_raw.split('\n') %}
       {% for line in lembretes_lines %}
         {% set parts = line.split(',') %}
