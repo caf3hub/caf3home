@@ -1,6 +1,6 @@
 blueprint:
-  name: Lembrete de Remédio Dinâmico
-  description: "Cria lembretes de remédios de maneira flexível, permitindo adicionar e remover quantos lembretes desejar."
+  name: Lembrete de Remédio com Entrada de Texto
+  description: "Cria lembretes de remédios a partir de uma lista formatada manualmente com nome, horário e descrição."
   domain: automation
   input:
     notify_service:
@@ -11,43 +11,44 @@ blueprint:
         text: {}
 
     lembretes:
-      name: Lembretes de Remédio
-      description: "Adicione quantos lembretes de remédio quiser, com nome, horário e descrição."
+      name: Lembretes
+      description: >
+        Adicione os lembretes no formato:
+        nome_remedio_1, HH:MM, descricao_remedio_1
+        nome_remedio_2, HH:MM, descricao_remedio_2
       selector:
-        object:
-          multiple: true
-          label:
-            nome_remedio:
-              name: Nome do Remédio
-              selector:
-                text: {}
-
-            horario_remedio:
-              name: Horário do Lembrete
-              selector:
-                time: {}
-
-            descricao_remedio:
-              name: Descrição do Remédio
-              selector:
-                text: {}
+        text:
+          multiline: true
 
 variables:
-  reminders: !input lembretes
+  reminder_list: |
+    {% set lembretes_raw = !input lembretes %}
+    {% set lembretes_lines = lembretes_raw.split('\n') %}
+    {% set lembretes = [] %}
+    {% for line in lembretes_lines %}
+      {% set parts = line.split(',') %}
+      {% if parts|length == 3 %}
+        {% set lembrete = {
+          "nome_remedio": parts[0].strip(),
+          "horario_remedio": parts[1].strip(),
+          "descricao_remedio": parts[2].strip()
+        } %}
+        {% set lembretes = lembretes + [lembrete] %}
+      {% endif %}
+    {% endfor %}
+    {{ lembretes }}
 
 trigger:
   # Gera um trigger para cada lembrete baseado no horário
-  - platform: template
-    value_template: "{{ (reminders | map(attribute='horario_remedio') | list) | join(', ') }}"
-
-condition: []
+  - platform: time_pattern
+    minutes: "/1"  # Verifica a cada minuto se há um lembrete
 
 action:
   - repeat:
-      count: "{{ reminders | length }}"
+      count: "{{ reminder_list | length }}"
       sequence:
         - variables:
-            reminder: "{{ reminders[repeat.index] }}"
+            reminder: "{{ reminder_list[repeat.index] }}"
         - choose:
             - conditions: "{{ now().strftime('%H:%M') == reminder.horario_remedio }}"
               sequence:
