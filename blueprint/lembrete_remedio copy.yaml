@@ -49,9 +49,11 @@ action:
         - variables:
             reminder: "{{ reminder_list[repeat.index] }}"
         - choose:
-            - conditions: "{{ now().strftime('%H:%M') == reminder.horario_remedio }}"
+            - conditions: 
+                - condition: template
+                  value_template: "{{ now().strftime('%H:%M') == reminder.horario_remedio }}"
               sequence:
-                - service: !input notify_service
+                - service: "{{ notify_service }}"
                   data:
                     message: >
                       Lembrete de remédio: 
