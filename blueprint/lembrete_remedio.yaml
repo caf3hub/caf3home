@@ -20,31 +20,50 @@ blueprint:
         text:
           multiline: true
 
+variables:
+  lembretes_raw: !input lembretes
+  lembretes_lines: "{{ lembretes_raw.split('\n') }}"
+  reminder_list: >
+    {% set lembretes = [] %}
+    {% for line in lembretes_lines %}
+      {% set parts = line.split(',') %}
+      {% if parts | length == 3 %}
+        {% set lembrete = {
+          "nome_remedio": parts[0].strip(),
+          "horario_remedio": parts[1].strip(),
+          "descricao_remedio": parts[2].strip()
+        } %}
+        {% set lembretes = lembretes + [lembrete] %}
+      {% endif %}
+    {% endfor %}
+    {{ lembretes }}
+
 trigger:
-  - platform: time_pattern
-    minutes: "/1"  # Verifica a cada minuto se há um lembrete
+  - platform: template
+    value_template: >
+      {% set current_time = now().strftime('%H:%M') %}
+      {% for lembrete in reminder_list %}
+        {% if lembrete.horario_remedio == current_time %}
+          true
+        {% endif %}
+      {% endfor %}
+      false  # Se nenhum horário corresponde, retorna falso
 
 action:
-  - variables:
-      lembretes_raw: !input lembretes
-      lembretes_lines: "{{ lembretes_raw.split('\n') }}"
-      
   - repeat:
-      count: "{{ lembretes_lines | length }}"
+      count: "{{ reminder_list | length }}"
       sequence:
         - variables:
-            lembrete: "{{ lembretes_lines[repeat.index] }}"
-            parts: "{{ lembrete.split(',') }}"
-        
+            reminder: "{{ reminder_list[repeat.index] }}"
         - choose:
             - conditions:
                 - condition: template
-                  value_template: "{{ parts | length == 3 and now().strftime('%H:%M') == parts[1].strip() }}"
+                  value_template: "{{ now().strftime('%H:%M') == reminder.horario_remedio }}"
               sequence:
                 - service: "{{ notify_service }}"
                   data:
                     message: >
                       Lembrete de remédio: 
-                      - Nome: {{ parts[0].strip() }}
-                      - Horário: {{ parts[1].strip() }}
-                      - Descrição: {{ parts[2].strip() }}
+                      - Nome: {{ reminder.nome_remedio }}
+                      - Horário: {{ reminder.horario_remedio }}
+                      - Descrição: {{ reminder.descricao_remedio }}
