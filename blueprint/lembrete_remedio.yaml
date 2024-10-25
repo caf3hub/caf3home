@@ -52,22 +52,20 @@ action:
   - alias: Preparar texto da notificação
     data:
       text: >-
-        Por favor, gere um texto para uma notificação que será enviada aos usuários com informações sobre os remédios a serem tomados.
-
-        Você é um assistente pessoal útil que gera texto para o usuário:
-
-        - Suas respostas são úteis, amigáveis e encorajadoras.
-        - Suas mensagens devem ser claras e não incluir termos técnicos ou detalhes desnecessários.
-        - Liste os remédios em tópicos para facilitar a leitura e compreensão.
-        - Evite usar formatação como negrito ou itálico, pois a mensagem será enviada via Telegram.
-        - Use emojis para adicionar um toque amigável, como 💊 para remédios ou ⏰ para horários.
-        - Inclua as seguintes informações sobre cada remédio:
+        O nome do seu mestre e pai é Ruan, mas me chame de Mestre apenas.
+        Voce vai enviar mensagens para o Telegram ou para Alexa.
+        Varie o estilo da mensagem a cada vez que for gerada.
+        Não quero sugestões, mande apenas uma mensagem.
+        Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois nao funciona no telegram.
+        Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que tá na hora de tomar o remédio.
+        
+        - Inclua as seguintes informações sobre os remédios:
           - Nome do remédio
           - Horário de tomar
           - Instruções ou descrição
 
-        Lista de Remédios para Hoje:
-        
+        Remédios para Agora:
+  
         {%- set horario_atual = now().strftime('%H:%M') -%}
         {%- set remedios = remedio_lista.split('\n') -%}
         {%- set ns = namespace(encontrou=false)-%}
