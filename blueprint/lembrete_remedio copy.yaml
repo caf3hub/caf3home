@@ -52,15 +52,25 @@ action:
           - Horário de tomar
           - Instruções ou descrição
 
-        Lista de Remédios para Hoje:
+        Remédio para Agora:
         
-        {%- set remedios = remedio_lista.split('\n') -%}
-        {%- for remedio in remedios -%}
+        {%- set current_time = now().strftime('%H:%M') -%}
+        {%- set remedio_encontrado = '' -%}
+        {%- for remedio in remedio_lista.split('\n') -%}
           {%- set remedio_dados = remedio.split(', ') -%}
+          {%- if remedio_dados | length > 1 and remedio_dados[1].strip() == current_time -%}
+            {%- set remedio_encontrado = remedio -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- if remedio_encontrado -%}
+          {%- set remedio_dados = remedio_encontrado.split(', ') -%}
           - **Remédio**: {{ remedio_dados[0].strip() }} 💊
             **Horário**: {{ remedio_dados[1].strip() }} ⏰
             **Instrução**: {{ remedio_dados[2].strip() }}
-        {%- endfor -%}
+        {%- else -%}
+          Não há remédios a serem tomados neste horário. 
+        {%- endif -%}
 
       agent_id: conversation.google_generative_ai
     response_variable: agent
