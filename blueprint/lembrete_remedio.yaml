@@ -57,6 +57,7 @@ action:
         Varie o estilo da mensagem a cada vez que for gerada.
         Não quero sugestões, mande apenas uma mensagem.
         Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois nao funciona no telegram.
+        Se for quebrar linhas apenas faça como se tivesse dando um enter e continue a digitar.
         Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que tá na hora de tomar o remédio.
         
         - Inclua as seguintes informações sobre os remédios:
