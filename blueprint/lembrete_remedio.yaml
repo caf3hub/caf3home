@@ -18,10 +18,13 @@ blueprint:
 trigger:
   - platform: template
     value_template: >
-      {% for remedio in (remedio_lista | list) %}
+      {% for remedio in remedio_lista.split('\n') %}
         {% set remedio_dados = remedio.split(',') %}
-        {{ remedio_dados[1].strip() == now().strftime('%H:%M') }}
+        {% if remedio_dados[1].strip() == now().strftime('%H:%M') %}
+          {{ true }}
+        {% endif %}
       {% endfor %}
+      {{ false }}  # Caso contrário, retorna falso
 
 action:
   - alias: Preparar texto da notificação
@@ -60,4 +63,3 @@ action:
       target: !input notification_target
       title: "{{ now().strftime('%A') }} Lembrete de Remédios"
       message: "{{ agent.response.speech.plain.speech }}"
-    action: !input notification_target
