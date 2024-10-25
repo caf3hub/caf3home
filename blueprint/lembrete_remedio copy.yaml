@@ -32,6 +32,18 @@ condition:
       {{ now().strftime('%H:%M') in horarios }}
 
 action:
+  - alias: Log da lista de remédios
+    service: system_log.write
+    data:
+      message: "Lista de Remédios: {{ remedio_lista }}"
+      level: info
+      
+  - alias: Log dos horários
+    service: system_log.write
+    data:
+      message: "Horários: {{ horarios }}"
+      level: info
+
   - alias: Preparar texto da notificação
     data:
       text: >-
@@ -64,7 +76,7 @@ action:
     action: conversation.process
 
   - alias: Enviar notificação
+    service: !input notification_target
     data:
-      target: !input notification_target
       title: "{{ now().strftime('%A') }} Lembrete de Remédios"
       message: "{{ agent.response.speech.plain.speech }}"
