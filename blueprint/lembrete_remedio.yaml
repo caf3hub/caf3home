@@ -27,20 +27,31 @@ action:
   - alias: Preparar texto da notificação
     data:
       text: >-
-        Hora atual: {{ now().strftime("%A, %d de %B de %Y - %H:%M") }}
+        Por favor, gere um texto para uma notificação que será enviada aos usuários com informações sobre os remédios a serem tomados.
 
-        {%- for remedio in (remedio_lista | list) %}
-          {%- set remedio_dados = remedio.split(',') %}
-          {%- if remedio_dados[1].strip() == now().strftime('%H:%M') %}
-          
-          **Remédio**: {{ remedio_dados[0].strip() }}
-          **Horário**: {{ remedio_dados[1].strip() }}
-          **Instrução**: {{ remedio_dados[2].strip() }}
+        Você é um assistente pessoal útil que gera texto para o usuário:
 
-          {%- endif %}
-        {%- endfor %}
+        - Suas respostas são úteis, amigáveis e encorajadoras.
+        - Suas mensagens devem ser claras e não incluir termos técnicos ou detalhes desnecessários.
+        - Liste os remédios em tópicos para facilitar a leitura e compreensão.
+        - Evite usar formatação como negrito ou itálico, pois a mensagem será enviada via Telegram.
+        - Use emojis para adicionar um toque amigável, como 💊 para remédios ou ⏰ para horários.
+        - Inclua as seguintes informações sobre cada remédio:
+          - Nome do remédio
+          - Horário de tomar
+          - Instruções ou descrição
 
-    agent_id: conversation.google_generative_ai
+        Lista de Remédios para Hoje:
+        
+        {%- set remedios = remedio_lista.split('\n') -%}
+        {%- for remedio in remedios -%}
+          {%- set remedio_dados = remedio.split(', ') -%}
+          - **Remédio**: {{ remedio_dados[0].strip() }} 💊
+            **Horário**: {{ remedio_dados[1].strip() }} ⏰
+            **Instrução**: {{ remedio_dados[2].strip() }}
+        {%- endfor -%}
+
+      agent_id: conversation.google_generative_ai
     response_variable: agent
     action: conversation.process
 
