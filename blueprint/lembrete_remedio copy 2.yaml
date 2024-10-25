@@ -16,27 +16,25 @@ blueprint:
         text:
           multiline: true
 
+variables:
+  remedio_lista: !input remedio_lista
+
 triggers:
   - trigger: time_pattern
     minutes: /1
 
-variables:
-  remedios: !input remedio_lista.split('\n')
-
 condition:
   - condition: template
     value_template: >
+      {% set horario_atual = now().strftime('%H:%M') %}
       {% set remedios = remedio_lista.split('\n') %}
-      {% set horarios = [] %}
       {% for remedio in remedios %}
-        {% set remedio_dados = remedio.split(',') %}
-        {% if remedio_dados | length > 1 %}
-          {% if remedio_dados[1].strip() == now().strftime('%H:%M') %}
-            {% set horarios = horarios + [remedio_dados] %}
-          {% endif %}
+        {% set remedio_dados = remedio.split(', ') %}
+        {% if remedio_dados[1].strip() == horario_atual %}
+          {{ true }}
         {% endif %}
       {% endfor %}
-      {{ horarios | length > 0 }}
+      {{ false }}  # Retorna falso se nenhum remédio corresponder ao horário
 
 action:
   - alias: Preparar texto da notificação
@@ -44,12 +42,18 @@ action:
       text: >-
         Lista de Remédios para Agora:
         
-        {%- set remedios = remedio_lista.split('\n') | selectattr(1, 'equalto', now().strftime('%H:%M')) | list -%}
+        {%- set horario_atual = now().strftime('%H:%M') -%}
+        {%- set remedios = remedio_lista.split('\n') -%}
         {%- for remedio in remedios -%}
-          - **Remédio**: {{ remedio.split(',')[0].strip() }} 💊
-            **Horário**: {{ remedio.split(',')[1].strip() }} ⏰
-            **Instrução**: {{ remedio.split(',')[2].strip() }}
+          {%- set remedio_dados = remedio.split(', ') -%}
+          {%- if remedio_dados[1].strip() == horario_atual -%}
+            - **Remédio**: {{ remedio_dados[0].strip() }} 💊  
+              **Horário**: {{ remedio_dados[1].strip() }} ⏰  
+              **Instrução**: {{ remedio_dados[2].strip() }}  
+          {%- endif -%}
         {%- endfor -%}
+
+        horario remedio atual : {{ now().strftime('%H:%M') }}
 
       agent_id: conversation.google_generative_ai
     response_variable: agent
