@@ -59,7 +59,7 @@ action:
     action: conversation.process
 
   - alias: Enviar notificação
+    service: !input notification_target
     data:
-      target: !input notification_target
       title: "{{ now().strftime('%A') }} Lembrete de Remédios"
       message: "{{ agent.response.speech.plain.speech }}"
