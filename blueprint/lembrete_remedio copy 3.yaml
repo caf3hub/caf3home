@@ -6,6 +6,7 @@ blueprint:
     notification_target:
       name: Serviço de Notificação
       description: Serviço de notificação que irá enviar a mensagem.
+      default: "notify.mqtt_notify"
       selector:
         text:
     remedio_lista:
@@ -19,60 +20,17 @@ triggers:
   - trigger: time_pattern
     minutes: /1
 
-variables:
-  remedio_lista: !input remedio_lista
-
-condition:
-  - condition: template
-    value_template: >
-      {% set horarios = [] %}
-      {% for remedio in remedio_lista.split('\n') %}
-        {% set remedio_dados = remedio.split(',') %}
-        {% if remedio_dados | length > 1 %}
-          {% set horarios = horarios + [remedio_dados[1].strip()] %}
-        {% endif %}
-      {% endfor %}
-      {% set agora = now().strftime('%H:%M') %}
-      {{ agora in horarios }}
-
 action:
-  - alias: Log da lista de remédios
-    service: system_log.write
-    data:
-      message: "Lista de Remédios: {{ remedio_lista }}"
-      level: info
-      
-  - alias: Log dos horários
-    service: system_log.write
-    data:
-      message: "Horários: {{ horarios }}"
-      level: info
-
   - alias: Preparar texto da notificação
     data:
       text: >-
-        Por favor, gere um texto para uma notificação que será enviada aos usuários com informações sobre os remédios a serem tomados.
-
-        Você é um assistente pessoal útil que gera texto para o usuário:
-
-        - Suas respostas são úteis, amigáveis e encorajadoras.
-        - Suas mensagens devem ser claras e não incluir termos técnicos ou detalhes desnecessários.
-        - Liste os remédios em tópicos para facilitar a leitura e compreensão.
-        - Evite usar formatação como negrito ou itálico, pois a mensagem será enviada via Telegram.
-        - Use emojis para adicionar um toque amigável, como 💊 para remédios ou ⏰ para horários.
-        - Inclua as seguintes informações sobre cada remédio:
-          - Nome do remédio
-          - Horário de tomar
-          - Instruções ou descrição
-
-        Lista de Remédios para Hoje:
+        Lista de Remédios para Agora:
         
-        {%- set remedios = remedio_lista.split('\n') -%}
+        {%- set remedios = remedio_lista.split('\n') | selectattr(1, 'equalto', now().strftime('%H:%M')) | list -%}
         {%- for remedio in remedios -%}
-          {%- set remedio_dados = remedio.split(', ') -%}
-          - **Remédio**: {{ remedio_dados[0].strip() }} 💊
-            **Horário**: {{ remedio_dados[1].strip() }} ⏰
-            **Instrução**: {{ remedio_dados[2].strip() }}
+          - **Remédio**: {{ remedio.split(',')[0].strip() }} 💊
+            **Horário**: {{ remedio.split(',')[1].strip() }} ⏰
+            **Instrução**: {{ remedio.split(',')[2].strip() }}
         {%- endfor -%}
 
       agent_id: conversation.google_generative_ai
