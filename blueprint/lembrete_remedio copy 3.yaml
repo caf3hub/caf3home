@@ -1,0 +1,82 @@
+blueprint:
+  name: Lembrete Remédio
+  description: Cria lembretes de remédio em determinados horários.
+  domain: automation
+  input:
+    notification_target:
+      name: Serviço de Notificação
+      description: Serviço de notificação que irá enviar a mensagem.
+      selector:
+        text:
+    remedio_lista:
+      name: Lista de Remédios
+      description: Insira os remédios no formato --- Nome, Horário, Descrição
+      selector:
+        text:
+          multiline: true
+
+trigger:
+  - platform: time_pattern
+    minutes: '/1'  # A cada 1 minuto
+
+condition:
+  - condition: template
+    value_template: >
+      {% set horarios = [] %}
+      {% for remedio in remedio_lista.split('\n') %}
+        {% set remedio_dados = remedio.split(',') %}
+        {% if remedio_dados | length > 1 %}
+          {% set horarios = horarios + [remedio_dados[1].strip()] %}
+        {% endif %}
+      {% endfor %}
+      {{ now().strftime('%H:%M') in horarios }}
+
+action:
+  - alias: Log da lista de remédios
+    service: system_log.write
+    data:
+      message: "Lista de Remédios: {{ remedio_lista }}"
+      level: info
+      
+  - alias: Log dos horários
+    service: system_log.write
+    data:
+      message: "Horários: {{ horarios }}"
+      level: info
+
+  - alias: Preparar texto da notificação
+    data:
+      text: >-
+        Por favor, gere um texto para uma notificação que será enviada aos usuários com informações sobre os remédios a serem tomados.
+
+        Você é um assistente pessoal útil que gera texto para o usuário:
+
+        - Suas respostas são úteis, amigáveis e encorajadoras.
+        - Suas mensagens devem ser claras e não incluir termos técnicos ou detalhes desnecessários.
+        - Liste os remédios em tópicos para facilitar a leitura e compreensão.
+        - Evite usar formatação como negrito ou itálico, pois a mensagem será enviada via Telegram.
+        - Use emojis para adicionar um toque amigável, como 💊 para remédios ou ⏰ para horários.
+        - Inclua as seguintes informações sobre cada remédio:
+          - Nome do remédio
+          - Horário de tomar
+          - Instruções ou descrição
+
+        Lista de Remédios para Hoje:
+        
+        {%- set remedios = remedio_lista.split('\n') -%}
+        {%- for remedio in remedios -%}
+          {%- set remedio_dados = remedio.split(', ') -%}
+          - **Remédio**: {{ remedio_dados[0].strip() }} 💊
+            **Horário**: {{ remedio_dados[1].strip() }} ⏰
+            **Instrução**: {{ remedio_dados[2].strip() }}
+        {%- endfor -%}
+
+      agent_id: conversation.google_generative_ai
+    response_variable: agent
+    action: conversation.process
+
+  - alias: Enviar notificação
+    service: !input notification_target
+    data:
+      title: "{{ now().strftime('%A') }} Lembrete de Remédios"
+      message: "{{ agent.response.speech.plain.speech }}"
