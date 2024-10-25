@@ -15,21 +15,12 @@ blueprint:
         text:
           multiline: true
 
-trigger:
-  - platform: time_pattern
-    minutes: '/1'  # A cada 1 minuto
+triggers:
+  - trigger: time_pattern
+    minutes: /1
 
-condition:
-  - condition: template
-    value_template: >
-      {% set horarios = [] %}
-      {% for remedio in remedio_lista.split('\n') %}
-        {% set remedio_dados = remedio.split(',') %}
-        {% if remedio_dados | length > 1 %}
-          {% set horarios = horarios + [remedio_dados[1].strip()] %}
-        {% endif %}
-      {% endfor %}
-      {{ now().strftime('%H:%M') in horarios }}
+variables:
+  remedio_lista: !input remedio_lista
 
 action:
   - alias: Log da lista de remédios
