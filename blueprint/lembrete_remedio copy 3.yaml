@@ -1,5 +1,5 @@
 blueprint:
-  name: Lembrete Remédio
+  name: Lembrete Remédio - Conversation AI
   description: Cria lembretes de remédio em determinados horários.
   domain: automation
   input:
@@ -9,9 +9,15 @@ blueprint:
       default: "notify.mqtt_notify"
       selector:
         text:
+    conversation:
+      name: Serviço de Conversation AI
+      description: Serviço de conversation ai que irá gerar a mensagem.
+      default: "conversation.google_generative_ai"
+      selector:
+        text:
     remedio_lista:
       name: Lista de Remédios
-      description: Insira os remédios no formato --- Nome, Horário, Descrição
+      description: Insira os remédios no formato - Nome, HH:MM, Descrição
       selector:
         text:
           multiline: true
@@ -26,35 +32,45 @@ triggers:
 condition:
   - condition: template
     value_template: >
-      {%- set horario_atual = now().strftime('%H:%M') -%}
-      {%- set remedios = remedio_lista.split('\n') -%}
-      {%- for remedio in remedios -%}
-        {%- set remedio_dados = remedio.split(', ') -%}
-        {%- if remedio_dados[1].strip() == horario_atual -%}
-          {{ true }}
-        {%- endif -%}
-      {%- endfor -%}
+      {% set horario_atual = now().strftime('%H:%M') %}
+      {% set ns = namespace(horarios=[]) %}
+
+      {% for remedio in remedio_lista.split('\n') %}
+        {% set remedio_dados = remedio.split(', ') %}
+        {% if remedio_dados | length > 1 %}
+          {% set ns.horarios = ns.horarios + [remedio_dados[1].strip()] %}
+        {% endif %}
+      {% endfor %}
+
+      {% if horario_atual in ns.horarios %}
+        {{ true }}
+      {% else %}
+        {{ false }}
+      {% endif %}
 
 action:
   - alias: Preparar texto da notificação
     data:
       text: >-
-        Lista de Remédios para Agora:
-        
         {%- set horario_atual = now().strftime('%H:%M') -%}
         {%- set remedios = remedio_lista.split('\n') -%}
+        {%- set ns = namespace(encontrou=false)-%}
+
         {%- for remedio in remedios -%}
           {%- set remedio_dados = remedio.split(', ') -%}
-          {%- if remedio_dados[1].strip() == horario_atual -%}
+          {%- if remedio_dados | length > 2 and remedio_dados[1].strip() == horario_atual -%}
             - **Remédio**: {{ remedio_dados[0].strip() }} 💊  
               **Horário**: {{ remedio_dados[1].strip() }} ⏰  
               **Instrução**: {{ remedio_dados[2].strip() }}  
+            {%- set ns.encontrou = true -%}  {# Marca que encontrou um remédio #}
           {%- endif -%}
         {%- endfor -%}
 
-        horario remedio atual : {{ now().strftime('%H:%M') }}
+        {%- if not ns.encontrou -%}  {# Se nenhum remédio foi encontrado #}
+          Nenhum remédio a ser tomado agora.
+        {%- endif -%}
 
-      agent_id: conversation.google_generative_ai
+      agent_id: !input conversation
     response_variable: agent
     action: conversation.process
 
