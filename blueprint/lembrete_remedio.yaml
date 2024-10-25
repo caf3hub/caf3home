@@ -18,13 +18,14 @@ blueprint:
 trigger:
   - platform: template
     value_template: >
+      {% set horarios = [] %}
       {% for remedio in remedio_lista.split('\n') %}
         {% set remedio_dados = remedio.split(',') %}
-        {% if remedio_dados[1].strip() == now().strftime('%H:%M') %}
-          {{ true }}
+        {% if remedio_dados | length > 1 %}
+          {% set horarios = horarios + [remedio_dados[1].strip()] %}
         {% endif %}
       {% endfor %}
-      {{ false }}  # Caso contrário, retorna falso
+      {{ now().strftime('%H:%M') in horarios }}
 
 action:
   - alias: Preparar texto da notificação
