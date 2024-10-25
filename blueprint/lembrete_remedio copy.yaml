@@ -16,12 +16,12 @@ blueprint:
         text:
           multiline: true
 
+variables:
+  remedio_lista: !input remedio_lista
+
 triggers:
   - trigger: time_pattern
     minutes: /1
-
-variables:
-  remedios: !input remedio_lista.split('\n')
 
 condition:
   - condition: template
