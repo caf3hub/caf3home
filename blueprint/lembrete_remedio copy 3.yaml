@@ -26,14 +26,14 @@ triggers:
 condition:
   - condition: template
     value_template: >
-      {% set horario_atual = now().strftime('%H:%M') %}
-      {% set remedios = remedio_lista.split('\n') %}
-      {% for remedio in remedios %}
-        {% set remedio_dados = remedio.split(', ') %}
-        {% if remedio_dados[1].strip() == horario_atual %}
+      {%- set horario_atual = now().strftime('%H:%M') -%}
+      {%- set remedios = remedio_lista.split('\n') -%}
+      {%- for remedio in remedios -%}
+        {%- set remedio_dados = remedio.split(', ') -%}
+        {%- if remedio_dados[1].strip() == horario_atual -%}
           {{ true }}
-        {% endif %}
-      {% endfor %}
+        {%- endif -%}
+      {%- endfor -%}
       {{ false }}  # Retorna falso se nenhum remédio corresponder ao horário
 
 action:

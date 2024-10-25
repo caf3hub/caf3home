@@ -15,6 +15,7 @@ blueprint:
         text:
           multiline: true
 
+
 trigger:
   - platform: template
     value_template: >
