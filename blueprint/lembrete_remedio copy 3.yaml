@@ -30,6 +30,7 @@ action:
         Lista de Remédios para Agora:
         
         {%- set horario_atual = now().strftime('%H:%M') -%}
+        {% set remedios = remedio_lista.split('\n') %}
         {%- for remedio in remedios -%}
           {%- set remedio_dados = remedio.split(', ') -%}
           {%- if remedio_dados[1].strip() == horario_atual -%}
