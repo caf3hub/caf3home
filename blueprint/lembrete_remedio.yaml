@@ -1,0 +1,52 @@
+blueprint:
+  name: Lembrete Remédio
+  description: Cria lembretes de remédio em determinados horários.
+  domain: automation
+  input:
+    notification_target:
+      name: Serviço de Notificação
+      description: Serviço de notificação que irá enviar a mensagem.
+      selector:
+        text:
+    remedio_lista:
+      name: Lista de Remédios
+      description: Insira os remédios no formato - Nome, Horário, Descrição
+      selector:
+        text:
+          multiline: true
+
+trigger:
+  - platform: template
+    value_template: >
+      {% for remedio in (remedio_lista | list) %}
+        {% set remedio_dados = remedio.split(',') %}
+        {{ remedio_dados[1].strip() == now().strftime('%H:%M') }}
+      {% endfor %}
+
+action:
+  - alias: Preparar texto da notificação
+    data:
+      text: >-
+        Hora atual: {{ now().strftime("%A, %d de %B de %Y - %H:%M") }}
+
+        {%- for remedio in (remedio_lista | list) %}
+          {%- set remedio_dados = remedio.split(',') %}
+          {%- if remedio_dados[1].strip() == now().strftime('%H:%M') %}
+          
+          **Remédio**: {{ remedio_dados[0].strip() }}
+          **Horário**: {{ remedio_dados[1].strip() }}
+          **Instrução**: {{ remedio_dados[2].strip() }}
+
+          {%- endif %}
+        {%- endfor %}
+
+    agent_id: conversation.google_generative_ai
+    response_variable: agent
+    action: conversation.process
+
+  - alias: Enviar notificação
+    data:
+      target: !input notification_target
+      title: "{{ now().strftime('%A') }} Lembrete de Remédios"
+      message: "{{ agent.response.speech.plain.speech }}"
+    action: !input notification_target
