@@ -6,6 +6,7 @@ blueprint:
     notification_target:
       name: Serviço de Notificação
       description: Serviço de notificação que irá enviar a mensagem.
+      default: "notify.mqtt_notify"
       selector:
         text:
     remedio_lista:
@@ -18,6 +19,9 @@ blueprint:
 triggers:
   - trigger: time_pattern
     minutes: /1
+
+variables:
+  remedios: !input remedio_lista.split('\n')
 
 condition:
   - condition: template

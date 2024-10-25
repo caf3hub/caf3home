@@ -20,6 +20,9 @@ triggers:
   - trigger: time_pattern
     minutes: /1
 
+variables:
+  remedios: !input remedio_lista.split('\n')
+
 condition:
   - condition: template
     value_template: >
