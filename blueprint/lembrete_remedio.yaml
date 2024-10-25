@@ -10,7 +10,7 @@ blueprint:
         text:
     remedio_lista:
       name: Lista de Remédios
-      description: Insira os remédios no formato - Nome, Horário, Descrição
+      description: Insira os remédios no formato -- Nome, Horário, Descrição
       selector:
         text:
           multiline: true
