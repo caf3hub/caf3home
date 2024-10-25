@@ -10,23 +10,40 @@ blueprint:
         text:
     remedio_lista:
       name: Lista de Remédios
-      description: Insira os remédios no formato -- Nome, Horário, Descrição
+      description: Insira os remédios no formato --- Nome, Horário, Descrição
       selector:
         text:
           multiline: true
 
 trigger:
-  - platform: template
+  - platform: time_pattern
+    minutes: '/1'  # A cada 1 minuto
+
+condition:
+  - condition: template
     value_template: >
+      {% set horarios = [] %}
       {% for remedio in remedio_lista.split('\n') %}
         {% set remedio_dados = remedio.split(',') %}
-        {% if remedio_dados[1].strip() == now().strftime('%H:%M') %}
-          {{ true }}
+        {% if remedio_dados | length > 1 %}
+          {% set horarios = horarios + [remedio_dados[1].strip()] %}
         {% endif %}
       {% endfor %}
-      {{ false }}  # Caso contrário, retorna falso
+      {{ now().strftime('%H:%M') in horarios }}
 
 action:
+  - alias: Log da lista de remédios
+    service: system_log.write
+    data:
+      message: "Lista de Remédios: {{ remedio_lista }}"
+      level: info
+      
+  - alias: Log dos horários
+    service: system_log.write
+    data:
+      message: "Horários: {{ horarios }}"
+      level: info
+
   - alias: Preparar texto da notificação
     data:
       text: >-
@@ -59,7 +76,7 @@ action:
     action: conversation.process
 
   - alias: Enviar notificação
-    service: !input notification_target
     data:
+      target: !input notification_target
       title: "{{ now().strftime('%A') }} Lembrete de Remédios"
       message: "{{ agent.response.speech.plain.speech }}"
