@@ -34,7 +34,6 @@ condition:
           {{ true }}
         {%- endif -%}
       {%- endfor -%}
-      {{ false }}  # Retorna falso se nenhum remédio corresponder ao horário
 
 action:
   - alias: Preparar texto da notificação
