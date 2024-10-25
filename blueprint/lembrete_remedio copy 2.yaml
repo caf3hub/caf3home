@@ -19,6 +19,9 @@ triggers:
   - trigger: time_pattern
     minutes: /1
 
+variables:
+  remedio_lista: !input remedio_lista
+
 condition:
   - condition: template
     value_template: >
