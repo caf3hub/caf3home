@@ -29,11 +29,14 @@ action:
       text: >-
         Lista de Remédios para Agora:
         
-        {%- set remedios = remedio_lista.split('\n') | selectattr(1, 'equalto', now().strftime('%H:%M')) | list -%}
+        {%- set horario_atual = now().strftime('%H:%M') -%}
         {%- for remedio in remedios -%}
-          - **Remédio**: {{ remedio.split(',')[0].strip() }} 💊
-            **Horário**: {{ remedio.split(',')[1].strip() }} ⏰
-            **Instrução**: {{ remedio.split(',')[2].strip() }}
+          {%- set remedio_dados = remedio.split(', ') -%}
+          {%- if remedio_dados[1].strip() == horario_atual -%}
+            - **Remédio**: {{ remedio_dados[0].strip() }} 💊  
+              **Horário**: {{ remedio_dados[1].strip() }} ⏰  
+              **Instrução**: {{ remedio_dados[2].strip() }}  
+          {%- endif -%}
         {%- endfor -%}
 
       agent_id: conversation.google_generative_ai
