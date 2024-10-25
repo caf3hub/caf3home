@@ -39,6 +39,8 @@ action:
           {%- endif -%}
         {%- endfor -%}
 
+        horario remedio atual : {{ now().strftime('%H:%M') }}
+
       agent_id: conversation.google_generative_ai
     response_variable: agent
     action: conversation.process
