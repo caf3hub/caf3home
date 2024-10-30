@@ -46,12 +46,15 @@ triggers:
     id: lembrar_remedio
   - platform: time_pattern
     minutes: /1
+    id: hora_remedio
 
 conditions: []
 
 actions:
   - alias: preparar texto
     if:
+      - condition: trigger
+        id: hora_remedio
       - condition: template
         value_template: >
           {% set horario_atual = now().strftime('%H:%M') %}
