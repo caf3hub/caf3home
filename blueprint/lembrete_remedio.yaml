@@ -26,71 +26,136 @@ variables:
   remedio_lista: !input remedio_lista
 
 triggers:
+  - topic: home/telegram/message/user
+    id: remedio_tomado
+    payload: remedio_tomado
+    trigger: mqtt
+    alias: Remedio tomado
+  - topic: home/telegram/message/user
+    id: remedio_pendente
+    payload: remedio_pendente
+    trigger: mqtt
+    alias: Remedio Pendente
   - trigger: time_pattern
     minutes: /1
-
-condition:
-  - condition: template
-    value_template: >
-      {% set horario_atual = now().strftime('%H:%M') %}
-      {% set ns = namespace(horarios=[]) %}
-
-      {% for remedio in remedio_lista.split('\n') %}
-        {% set remedio_dados = remedio.split(', ') %}
-        {% if remedio_dados | length > 1 %}
-          {% set ns.horarios = ns.horarios + [remedio_dados[1].strip()] %}
-        {% endif %}
-      {% endfor %}
-
-      {% if horario_atual in ns.horarios %}
-        {{ true }}
-      {% else %}
-        {{ false }}
-      {% endif %}
+    id: hora_remedio
+    alias: Hora remedio
 
 action:
-  - alias: Preparar texto da notificação
-    data:
-      text: >-
-        O nome do seu mestre e pai é Ruan, mas me chame de Mestre apenas.
-        Voce vai enviar mensagens para o Telegram ou para Alexa.
-        Varie o estilo da mensagem a cada vez que for gerada.
-        Não quero sugestões, mande apenas uma mensagem.
-        Não envie "\n" e nem tente fazer quebras de linha assim, nem nada disso pois nao funciona no telegram.
-        Se for quebrar linhas apenas faça como se tivesse dando um enter e continue a digitar.
-        Crie uma mensagem única e personalizada, de maneira criativa e variada, para informar que tá na hora de tomar o remédio.
-        
-        - Inclua as seguintes informações sobre os remédios:
-          - Nome do remédio
-          - Horário de tomar
-          - Instruções ou descrição
+  - alias: Quando chega a hora do remedio
+    if:
+      - condition: trigger
+        id:
+          - hora_remedio
+    then:
+      - condition: template
+        value_template: |-
+          {% set horario_atual = now().strftime('%H:%M') %}
+          {% set ns = namespace(horarios=[]) %}
+          {% for remedio in remedio_lista.split('\n') %}
+            {% set remedio_dados = remedio.split(', ') %}
+            {% if remedio_dados | length > 1 %}
+              {% set ns.horarios = ns.horarios + [remedio_dados[1].strip()] %}
+            {% endif %}
+          {% endfor %}
+          {{ horario_atual in ns.horarios }}
+      - action: conversation.process
+        metadata: {}
+        data:
+          text: >
+            O nome do seu mestre e pai é Ruan, mas me chame de Mestre apenas.
+            Voce vai enviar mensagens para o Telegram ou para Alexa. Varie o
+            estilo da mensagem a cada vez que for gerada. Não quero sugestões,
+            mande apenas uma mensagem. Não envie "\n" e nem tente fazer quebras
+            de linha assim, nem nada disso pois nao funciona no telegram. Se for
+            quebrar linhas apenas faça como se tivesse dando um enter e continue
+            a digitar. Crie uma mensagem única e personalizada, de maneira
+            criativa e variada, para informar que tá na hora de tomar o remédio.
+            - Inclua as seguintes informações sobre os remédios:
+              - Nome do remédio
+              - Horário de tomar
+              - Instruções ou descrição
 
-        Remédios para Agora:
-  
-        {%- set horario_atual = now().strftime('%H:%M') -%}
-        {%- set remedios = remedio_lista.split('\n') -%}
-        {%- set ns = namespace(encontrou=false)-%}
+            Remédios para Agora:
+            {%- set horario_atual = now().strftime('%H:%M') -%} {%- set remedios
+            = remedio_lista.split('\n') -%} {%- set ns =
+            namespace(encontrou=false)-%}
+            {%- for remedio in remedios -%}
+              {%- set remedio_dados = remedio.split(', ') -%}
+              {%- if remedio_dados | length > 2 and remedio_dados[1].strip() == horario_atual -%}
+                - **Remédio**: {{ remedio_dados[0].strip() }} 💊  
+                  **Horário**: {{ remedio_dados[1].strip() }} ⏰  
+                  **Instrução**: {{ remedio_dados[2].strip() }}  
+                {%- set ns.encontrou = true -%}  {# Marca que encontrou um remédio #}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if not ns.encontrou -%}  {# Se nenhum remédio foi encontrado #}
+              Nenhum remédio a ser tomado agora.
+            {%- endif -%}
+          agent_id: !input conversation
+        response_variable: agent
 
-        {%- for remedio in remedios -%}
-          {%- set remedio_dados = remedio.split(', ') -%}
-          {%- if remedio_dados | length > 2 and remedio_dados[1].strip() == horario_atual -%}
-            - **Remédio**: {{ remedio_dados[0].strip() }} 💊  
-              **Horário**: {{ remedio_dados[1].strip() }} ⏰  
-              **Instrução**: {{ remedio_dados[2].strip() }}  
-            {%- set ns.encontrou = true -%}  {# Marca que encontrou um remédio #}
-          {%- endif -%}
-        {%- endfor -%}
+  - alias: Se receber remedio_tomado no user
+    if:
+      - condition: trigger
+        id:
+          - remedio_tomado
+    then:
+      - action: conversation.process
+        metadata: {}
+        data:
+          text: >-
+            O nome do seu mestre e pai é Ruan, mas me chame de Mestre apenas.
+            Você vai enviar mensagens para o Telegram ou para Alexa. Varie o
+            estilo da mensagem a cada vez que for gerada. Não quero sugestões,
+            mande apenas uma mensagem. Não envie "\n" e nem tente fazer quebras
+            de linha assim, nem nada disso pois não funciona no Telegram. Se for
+            quebrar linhas, apenas faça como se tivesse dando um enter e
+            continue a digitar. Crie uma mensagem única e personalizada, de
+            maneira criativa e variada, O usuario ja tomou o remedio. responda
+            de forma positiva e encorajadora, lembrando-o da importância de
+            manter o tratamento em dia.
+          agent_id: !input conversation
+        response_variable: agent
 
-        {%- if not ns.encontrou -%}  {# Se nenhum remédio foi encontrado #}
-          Nenhum remédio a ser tomado agora.
-        {%- endif -%}
-
-      agent_id: !input conversation
-    response_variable: agent
-    action: conversation.process
+  - alias: Se receber remedio_pendente no user
+    if:
+      - condition: trigger
+        id:
+          - remedio_pendente
+    then:
+      - delay:
+          hours: 0
+          minutes: 20
+          seconds: 0
+          milliseconds: 0
+      - action: conversation.process
+        metadata: {}
+        data:
+          text: >-
+            O nome do seu mestre e pai é Ruan, mas me chame de Mestre apenas.
+            Você vai enviar mensagens para o Telegram ou para Alexa. Varie o
+            estilo da mensagem a cada vez que for gerada. Não quero sugestões,
+            mande apenas uma mensagem. Não envie "\n" e nem tente fazer quebras
+            de linha assim, nem nada disso pois não funciona no Telegram. Se for
+            quebrar linhas, apenas faça como se tivesse dando um enter e
+            continue a digitar. Crie uma mensagem única e personalizada, de
+            maneira criativa e variada, O usuario ainda não tomou o remedio.
+            responda com um lembrete gentil e encorajador, enfatizando a
+            importância de tomar o remédio e oferecendo-se para lembrar
+            novamente mais tarde.
+          agent_id: !input conversation
+        response_variable: agent
 
   - alias: Enviar notificação
-    service: !input notification_target
-    data:
-      title: "{{ now().strftime('%A') }} Lembrete de Remédios"
-      message: "{{ agent.response.speech.plain.speech }}"
+    if:
+      - condition: template
+        value_template: "{{ agent is not none and agent.response.speech.plain.speech | length > 0 }}"
+    then:
+      - service: !input notification_target
+        data:
+          title: "{{ now().strftime('%A') }} Lembrete de Remédios"
+          message: "{{ agent.response.speech.plain.speech }}"
+
+mode: parallel
+max: 3
