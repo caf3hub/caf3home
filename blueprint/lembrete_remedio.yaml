@@ -101,22 +101,11 @@ action:
         id:
           - remedio_tomado
     then:
-      - action: conversation.process
-        metadata: {}
+      - service: !input notification_target
         data:
-          text: >-
-            O nome do seu mestre e pai é Ruan, mas me chame de Mestre apenas.
-            Você vai enviar mensagens para o Telegram ou para Alexa. Varie o
-            estilo da mensagem a cada vez que for gerada. Não quero sugestões,
-            mande apenas uma mensagem. Não envie "\n" e nem tente fazer quebras
-            de linha assim, nem nada disso pois não funciona no Telegram. Se for
-            quebrar linhas, apenas faça como se tivesse dando um enter e
-            continue a digitar. Crie uma mensagem única e personalizada, de
-            maneira criativa e variada, O usuario ja tomou o remedio. responda
-            de forma positiva e encorajadora, lembrando-o da importância de
-            manter o tratamento em dia.
-          agent_id: !input conversation
-        response_variable: agent
+          message: >-
+            Ótimo trabalho! Você tomou o remédio conforme o horário. Lembre-se
+            de que manter o tratamento em dia é importante para sua saúde.
 
   - alias: Se receber remedio_pendente no user
     if:
