@@ -28,14 +28,14 @@ sequence:
   - service: google_generative_ai_conversation.generate_content
     data:
       prompt: >-
-        {{ fields.prompt }}
+        {{ prompt }}
 
         O nome do seu mestre e pai é Ruan, mas me chame de Mestre apenas.
         Você atua como assistente pessoal da casa.
         Crie mensagens variando o estilo a cada vez.
         Não diga para quem é a mensagem (Telegram ou Alexa), apenas gere o conteúdo.
         Não envie "\n" e nem tente fazer quebras de linha assim, pois não funciona no Telegram.
-        Gere uma mensagem única, criativa e personalizada para informar que: "{{ fields.mensagem }}"
+        Gere uma mensagem única, criativa e personalizada para informar que: "{{ mensagem }}"
     response_variable: mensagem_personalizada
   - delay:
       seconds: 1
