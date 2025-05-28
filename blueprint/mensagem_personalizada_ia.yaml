@@ -21,7 +21,7 @@ fields:
     description: O ID numérico do chat do Telegram para onde a mensagem será enviada. Pode ser de um usuário ou grupo.
     default: "29832395"
     selector:
-      text::
+      text:
   prompt:
     name: Prompt
     description: Prompt do generative ai conversation.
