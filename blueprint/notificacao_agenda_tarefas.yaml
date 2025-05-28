@@ -39,7 +39,6 @@ blueprint:
     notification_target:
       name: Serviço de Notificação
       description: Serviço de notificação que irá enviar a mensagem.
-      default: "notify.mqtt_notify"
       selector:
         text:
     telegram_chat_id: 
@@ -174,8 +173,9 @@ action:
 
   - alias: Enviar notificação
     data:
+      target: !input notification_target
       title: "{{ now().strftime('%A') }} Agenda"
-      message: "{{ agent.response.speech.plain.speech | replace('\n', ' ') }}"
-      data:
-        chat_id: "{{ telegram_chat_id }}"
-    action: !input notification_target
+      message: "{{ agent.response.speech.plain.speech }}"
+      data: 
+        chat_id: "{{ !input telegram_chat_id }}" 
+    action: notify.mqtt_notify
