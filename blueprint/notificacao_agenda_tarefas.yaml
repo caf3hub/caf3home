@@ -41,6 +41,12 @@ blueprint:
       description: Serviço de notificação que irá enviar a mensagem.
       selector:
         text:
+    telegram_chat_id: 
+      name: ID do Chat do Telegram
+      description: O ID numérico do chat do Telegram para onde a mensagem será enviada. Pode ser de um usuário ou grupo.
+      default: "29832395"
+      selector:
+        text:
     todo_entities:
       name: Entidades de Tarefas
       description: Entidades de listas de tarefas a serem verificadas.
@@ -170,4 +176,6 @@ action:
       target: !input notification_target
       title: "{{ now().strftime('%A') }} Agenda"
       message: "{{ agent.response.speech.plain.speech }}"
+      data: 
+        chat_id: "{{ telegram_chat_id }}" 
     action: notify.mqtt_notify
