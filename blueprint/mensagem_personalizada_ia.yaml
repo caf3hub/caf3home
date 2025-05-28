@@ -19,12 +19,9 @@ fields:
   telegram_chat_id: 
     name: ID do Chat do Telegram
     description: O ID numérico do chat do Telegram para onde a mensagem será enviada. Pode ser de um usuário ou grupo.
+    default: "29832395"
     selector:
-      number:
-        min: -9999999999 
-        max: 9999999999 
-        mode: box
-    required: true 
+      text::
   prompt:
     name: Prompt
     description: Prompt do generative ai conversation.
@@ -53,5 +50,4 @@ sequence:
       message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
       data: 
         chat_id: "{{ telegram_chat_id }}" 
-    enabled: "{{ telegram_chat_id is defined and telegram_chat_id is not none }}" 
 icon: mdi:message
