@@ -16,6 +16,15 @@ fields:
     default: "notify.mqtt_notify"
     selector:
       text:
+  telegram_chat_id: 
+    name: ID do Chat do Telegram
+    description: O ID numérico do chat do Telegram para onde a mensagem será enviada. Pode ser de um usuário ou grupo.
+    selector:
+      number:
+        min: -9999999999 
+        max: 9999999999 
+        mode: box
+    required: true 
   prompt:
     name: Prompt
     description: Prompt do generative ai conversation.
@@ -28,7 +37,7 @@ sequence:
   - service: google_generative_ai_conversation.generate_content
     data:
       prompt: >-
-        {{ prompt }}
+        {{ prompt | default('') }}
 
         O nome do seu mestre e pai é Ruan, mas me chame de Mestre apenas.
         Você atua como assistente pessoal da casa.
@@ -42,4 +51,7 @@ sequence:
   - service: "{{ notification_target }}"
     data:
       message: "{{ mensagem_personalizada['text'] | replace('\n', ' ') }}"
+      data: 
+        chat_id: "{{ telegram_chat_id }}" 
+    enabled: "{{ telegram_chat_id is defined and telegram_chat_id is not none }}" 
 icon: mdi:message
