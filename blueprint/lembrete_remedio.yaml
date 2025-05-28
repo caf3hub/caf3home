@@ -21,6 +21,12 @@ blueprint:
       selector:
         text:
           multiline: true
+    telegram_chat_id: # <--- NOVO INPUT AQUI
+      name: ID do Chat do Telegram
+      description: O ID numérico do chat do Telegram para onde a mensagem será enviada.
+      default: "29832395" # Exemplo de ID padrão
+      selector:
+        text:
 
 variables:
   remedio_lista: !input remedio_lista
@@ -59,7 +65,7 @@ action:
             {% endif %}
           {% endfor %}
           {{ horario_atual in ns.horarios }}
-      - action: conversation.process
+      - service: conversation.process
         metadata: {}
         data:
           text: >
@@ -106,6 +112,8 @@ action:
           message: >-
             Ótimo trabalho! Você tomou o remédio conforme o horário. Lembre-se
             de que manter o tratamento em dia é importante para sua saúde.
+          data: # <--- Adicionado o bloco 'data' aqui
+            chat_id: !input telegram_chat_id # <--- Usando o input do blueprint
 
   - alias: Se receber remedio_pendente no user
     if:
@@ -118,7 +126,7 @@ action:
           minutes: 20
           seconds: 0
           milliseconds: 0
-      - action: conversation.process
+      - service: conversation.process
         metadata: {}
         data:
           text: >-
@@ -144,7 +152,9 @@ action:
       - service: !input notification_target
         data:
           title: "{{ now().strftime('%A') }} Lembrete de Remédios"
-          message: "{{ agent.response.speech.plain.speech }}"
+          message: "{{ agent.response.speech.plain.speech | replace('\n', ' ') }}" # <-- Adicionado replace para garantir linha única
+          data: # <--- Adicionado o bloco 'data' aqui
+            chat_id: !input telegram_chat_id # <--- Usando o input do blueprint
 
 mode: parallel
 max: 3
