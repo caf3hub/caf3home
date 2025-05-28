@@ -177,5 +177,5 @@ action:
       title: "{{ now().strftime('%A') }} Agenda"
       message: "{{ agent.response.speech.plain.speech }}"
       data: 
-        chat_id: "{{ !input telegram_chat_id }}" 
+        chat_id: !input telegram_chat_id
     action: notify.mqtt_notify
