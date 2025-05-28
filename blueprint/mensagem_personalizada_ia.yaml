@@ -36,7 +36,7 @@ sequence:
       prompt: >-
         {{ prompt | default('') }}
 
-        O nome do seu mestre e pai é Ruan, mas me chame de Mestre apenas.
+        Me chame de Mestre.
         Você atua como assistente pessoal da casa.
         Crie mensagens variando o estilo a cada vez.
         Não diga para quem é a mensagem (Telegram ou Alexa), apenas gere o conteúdo.
